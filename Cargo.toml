@@ -1,0 +1,7 @@
+[package]
+name = "miv"
+version = "0.1.0"
+authors = ["Xavier Perez <duosrx@gmail.com>"]
+
+[dependencies]
+rustbox = "*"
