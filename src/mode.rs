@@ -39,6 +39,7 @@ impl Mode {
                     Key::Char('o') => Some(Multi(vec!(ChangeMode(Mode::Insert), NewLine))),
                     Key::Char('x') => Some(Delete),
                     Key::Char('q') => Some(Quit),
+                    Key::Ctrl('c') => Some(Quit),
                     Key::Ctrl('s') => Some(Save),
                     _ => None
                 }
