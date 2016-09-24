@@ -13,31 +13,33 @@ pub enum Mode {
 
 impl Mode {
     pub fn key_pressed(self, key: rustbox::Key) -> Option<Action> {
+        use state::Action::*;
+
         match self {
             Mode::Insert => {
                 match key {
-                    Key::Esc  => Some(Action::ChangeMode(Mode::Command)),
-                    Key::Backspace => Some(Action::BackwardDelete),
-                    Key::Enter => Some(Action::NewLine),
-                    Key::Char(c) => Some(Action::Insert(c)),
-                    Key::Up => Some(Action::MoveCursor(Up)),
-                    Key::Down => Some(Action::MoveCursor(Down)),
-                    Key::Left => Some(Action::MoveCursor(Left)),
-                    Key::Right => Some(Action::MoveCursor(Right)),
+                    Key::Esc  => Some(ChangeMode(Mode::Command)),
+                    Key::Backspace => Some(BackwardDelete),
+                    Key::Enter => Some(NewLineAtPoint),
+                    Key::Char(c) => Some(Insert(c)),
+                    Key::Up => Some(MoveCursor(Up)),
+                    Key::Down => Some(MoveCursor(Down)),
+                    Key::Left => Some(MoveCursor(Left)),
+                    Key::Right => Some(MoveCursor(Right)),
                     _ => None
                 }
             },
             Mode::Command => {
                 match key {
-                    Key::Char('k') | Key::Up => Some(Action::MoveCursor(Up)),
-                    Key::Char('j') | Key::Down => Some(Action::MoveCursor(Down)),
-                    Key::Char('h') | Key::Left => Some(Action::MoveCursor(Left)),
-                    Key::Char('l') | Key::Right => Some(Action::MoveCursor(Right)),
-                    Key::Char('i') => Some(Action::ChangeMode(Mode::Insert)),
-                    Key::Char('x') => Some(Action::Delete),
-                    Key::Char('q') => Some(Action::Quit),
-
-                    Key::Ctrl('s') => Some(Action::Save),
+                    Key::Char('k') | Key::Up => Some(MoveCursor(Up)),
+                    Key::Char('j') | Key::Down => Some(MoveCursor(Down)),
+                    Key::Char('h') | Key::Left => Some(MoveCursor(Left)),
+                    Key::Char('l') | Key::Right => Some(MoveCursor(Right)),
+                    Key::Char('i') => Some(ChangeMode(Mode::Insert)),
+                    Key::Char('o') => Some(Multi(vec!(ChangeMode(Mode::Insert), NewLine))),
+                    Key::Char('x') => Some(Delete),
+                    Key::Char('q') => Some(Quit),
+                    Key::Ctrl('s') => Some(Save),
                     _ => None
                 }
             }

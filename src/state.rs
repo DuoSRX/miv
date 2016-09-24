@@ -15,16 +15,18 @@ pub struct State {
     pub filepath: Option<String>, // the path of the file we're editing
 }
 
-#[derive(PartialEq,Copy,Debug,Clone)]
+#[derive(PartialEq,Debug,Clone)]
 pub enum Action {
     BackwardDelete,
     ChangeMode(Mode),
     Delete,
     Insert(char),
     NewLine,
+    NewLineAtPoint,
     MoveCursor(Direction),
     Save,
     Quit,
+    Multi(Vec<Action>),
 }
 
 impl State {
@@ -41,42 +43,56 @@ impl State {
 
     pub fn handle_key(&mut self, key: rustbox::Key) -> bool {
         if let Some(action) = self.mode.key_pressed(key) {
-            match action {
-                Action::NewLine => {
-                    let mut buffer = self.buffer.clone();
-                    let newline = buffer[self.cursor.y].split_off(self.cursor.x);
-                    buffer.push(newline);
-                    self.buffer = buffer;
+            self.execute_action(action)
+        } else {
+            false
+        }
+    }
 
-                    self.cursor.x = 0;
-                    self.cursor.y += 1;
-                },
-                Action::Insert(c) => {
-                    let ref mut line = self.buffer[self.cursor.y];
-                    self.cursor.x += 1;
+    fn execute_action(&mut self, action: Action) -> bool {
+        match action {
+            Action::NewLineAtPoint => {
+                let mut buffer = self.buffer.clone();
+                let newline = buffer[self.cursor.y].split_off(self.cursor.x);
+                buffer.push(newline);
+                self.buffer = buffer;
 
-                    if self.cursor.x > line.len() {
-                        line.push(c);
-                    } else {
-                        line.insert(self.cursor.x, c);
-                    }
+                self.cursor.x = 0;
+                self.cursor.y += 1;
+            }
+            Action::NewLine => {
+                self.cursor.y += 1;
+                self.buffer.insert(self.cursor.y, Vec::new());
+            }
+            Action::Insert(c) => {
+                let ref mut line = self.buffer[self.cursor.y];
+                self.cursor.x += 1;
+
+                if self.cursor.x > line.len() {
+                    line.push(c);
+                } else {
+                    line.insert(self.cursor.x, c);
                 }
-                Action::Delete => {
-                    self.buffer[self.cursor.y].remove(self.cursor.x);
+            }
+            Action::Delete => {
+                self.buffer[self.cursor.y].remove(self.cursor.x);
+            }
+            Action::BackwardDelete => {
+                self.cursor.x -= 1;
+                self.buffer[self.cursor.y].remove(self.cursor.x);
+            }
+            Action::MoveCursor(direction) => {
+                self.move_cursor(direction);
+            }
+            Action::ChangeMode(mode) => self.mode = mode,
+            Action::Save => self.save_file(),
+            Action::Quit => { return true },
+            Action::Multi(actions) => {
+                for action in actions.iter() {
+                    self.execute_action(action.clone());
                 }
-                Action::BackwardDelete => {
-                    self.cursor.x -= 1;
-                    self.buffer[self.cursor.y].remove(self.cursor.x);
-                }
-                Action::MoveCursor(direction) => {
-                    self.move_cursor(direction);
-                }
-                Action::ChangeMode(mode) => self.mode = mode,
-                Action::Save => self.save_file(),
-                Action::Quit => { return true }
             }
         }
-
         false
     }
 
