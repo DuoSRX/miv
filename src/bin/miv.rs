@@ -1,16 +1,42 @@
 extern crate rustbox;
 extern crate miv;
 
+use std::env;
+use std::io::Read;
+use std::fs::File;
 use rustbox::{Key,Color, RustBox};
 
 use miv::mode::{Mode};
 use miv::point::Point;
 use miv::state::State;
 
+fn buffer_from_file(path: String) -> Vec<Vec<char>> {
+    let mut file = File::open(path).unwrap();
+    let mut s = String::new();
+    let _ = file.read_to_string(&mut s);
+    let mut buf = Vec::new();
+
+    for line in s.lines() {
+        let mut l = Vec::with_capacity(line.len());
+        for c in line.chars() {
+            l.push(c);
+        }
+        buf.push(l)
+    }
+
+    buf
+}
+
 fn main() {
     let rustbox = RustBox::init(Default::default()).unwrap();
 
     let mut state = State::new(rustbox.width(), rustbox.height());
+
+    let args: Vec<String> = env::args().collect();
+    if let Some(path) = args.get(1) {
+        state.buffer = buffer_from_file(path.clone());
+        state.filepath = Some(path.clone());
+    }
 
     rustbox.clear();
     rustbox.set_cursor(0, 0);

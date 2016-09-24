@@ -36,6 +36,8 @@ impl Mode {
                     Key::Char('i') => Some(Action::ChangeMode(Mode::Insert)),
                     Key::Char('x') => Some(Action::Delete),
                     Key::Char('q') => Some(Action::Quit),
+
+                    Key::Ctrl('s') => Some(Action::Save),
                     _ => None
                 }
             }

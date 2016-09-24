@@ -1,5 +1,8 @@
 extern crate rustbox;
 
+use std::fs::File;
+use std::io::Write;
+
 use mode::Mode;
 use point::{Direction,Point};
 
@@ -8,17 +11,19 @@ pub struct State {
     pub cursor: Point,
     pub buffer: Vec<Vec<char>>,
     pub width: usize,
-    pub height: usize
+    pub height: usize,
+    pub filepath: Option<String>, // the path of the file we're editing
 }
 
 #[derive(PartialEq,Copy,Debug,Clone)]
 pub enum Action {
-    Insert(char),
     BackwardDelete,
+    ChangeMode(Mode),
     Delete,
+    Insert(char),
     NewLine,
     MoveCursor(Direction),
-    ChangeMode(Mode),
+    Save,
     Quit,
 }
 
@@ -30,6 +35,7 @@ impl State {
             buffer: vec!(Vec::with_capacity(120)),
             width: width,
             height: height,
+            filepath: None,
         }
     }
 
@@ -66,6 +72,7 @@ impl State {
                     self.move_cursor(direction);
                 }
                 Action::ChangeMode(mode) => self.mode = mode,
+                Action::Save => self.save_file(),
                 Action::Quit => { return true }
             }
         }
@@ -78,6 +85,19 @@ impl State {
 
         if p.x < self.width && p.y < self.height {
             self.cursor = p;
+        }
+    }
+
+    pub fn save_file(&mut self) {
+        if self.filepath.is_none() { return } // TODO: choose filepath
+
+        let path = self.filepath.clone().unwrap();
+        let mut f = File::create(path).unwrap();
+        for line in self.buffer.iter() {
+            for &c in line.iter() {
+                let _ = f.write_all(&[c as u8]);
+            }
+            let _ = f.write_all(&['\n' as u8]);
         }
     }
 }
