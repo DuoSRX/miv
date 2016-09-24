@@ -27,7 +27,7 @@ impl State {
         State {
             mode: Mode::Command,
             cursor: Point::new(0, 0),
-            buffer: vec!(Vec::with_capacity(10)),
+            buffer: vec!(Vec::with_capacity(120)),
             width: width,
             height: height,
         }
@@ -37,7 +37,11 @@ impl State {
         if let Some(action) = self.mode.key_pressed(key) {
             match action {
                 Action::NewLine => {
-                    self.buffer.push(Vec::new());
+                    let mut buffer = self.buffer.clone();
+                    let newline = buffer[self.cursor.y].split_off(self.cursor.x);
+                    buffer.push(newline);
+                    self.buffer = buffer;
+
                     self.cursor.x = 0;
                     self.cursor.y += 1;
                 },

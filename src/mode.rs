@@ -3,7 +3,6 @@ extern crate rustbox;
 use rustbox::Key;
 
 use state::Action;
-use point::Direction;
 use point::Direction::{Up,Down,Left,Right};
 
 #[derive(PartialEq,Debug,Copy,Clone)]

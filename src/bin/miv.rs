@@ -39,6 +39,8 @@ fn render(rustbox: &rustbox::RustBox, state: &State) {
     let mut x = 0;
     let mut y = 0;
 
+    rustbox.clear();
+
     for line in state.buffer.iter() {
         for &c in line.iter() {
             if c == '\n' { continue };
@@ -55,7 +57,7 @@ fn render(rustbox: &rustbox::RustBox, state: &State) {
 }
 
 fn print_at(rustbox: &rustbox::RustBox, point: Point, character: char) {
-    rustbox.print_char(point.x as usize, point.y as usize, rustbox::RB_BOLD, Color::Yellow, Color::Black, character);
+    rustbox.print_char(point.x, point.y, rustbox::RB_BOLD, Color::Yellow, Color::Black, character);
 }
 
 fn print_mode(rustbox: &rustbox::RustBox, state: &State) {
@@ -63,6 +65,8 @@ fn print_mode(rustbox: &rustbox::RustBox, state: &State) {
         Mode::Insert => "-- Insert Mode --",
         Mode::Command => "-- Command Mode --",
     };
+    let coords = format!("{}:{}", state.cursor.y + 1, state.cursor.x);
 
     rustbox.print(0, rustbox.height() - 1, rustbox::RB_BOLD, Color::White, Color::Black, mode);
+    rustbox.print(rustbox.width() - 2 - coords.len(), rustbox.height() - 1, rustbox::RB_BOLD, Color::White, Color::Black, coords.as_ref());
 }
