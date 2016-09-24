@@ -3,7 +3,7 @@ extern crate miv;
 
 use std::env;
 use std::io::Read;
-use std::fs::{File,OpenOptions};
+use std::fs::File;
 use rustbox::{Key,Color, RustBox};
 
 use miv::mode::{Mode};
@@ -75,7 +75,7 @@ fn print_at(rustbox: &rustbox::RustBox, point: Point, character: char) {
 fn print_mode(rustbox: &rustbox::RustBox, state: &State) {
     let mode = match state.mode {
         Mode::Insert => "-- Insert Mode --",
-        Mode::Command => "-- Command Mode --",
+        Mode::Normal => "-- Normal Mode --",
     };
     let coords = format!("{}:{}", state.cursor.y + 1, state.cursor.x);
 

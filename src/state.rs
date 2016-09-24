@@ -1,7 +1,7 @@
 extern crate rustbox;
 
 use std::io::Write;
-use std::fs::{File,OpenOptions};
+use std::fs::OpenOptions;
 
 use mode::Mode;
 use point::{Direction,Point};
@@ -33,7 +33,7 @@ pub enum Action {
 impl State {
     pub fn new(width: usize, height: usize) -> State {
         State {
-            mode: Mode::Command,
+            mode: Mode::Normal,
             cursor: Point::new(0, 0),
             buffer: vec!(Vec::with_capacity(120)),
             width: width,
@@ -112,7 +112,6 @@ impl State {
 
         let path = self.filepath.clone().unwrap();
         let mut file = OpenOptions::new().read(true).write(true).create(true).open(path).unwrap();
-        //let mut f = File::create(path).unwrap();
         for line in self.buffer.iter() {
             for &c in line.iter() {
                 let _ = file.write_all(&[c as u8]);

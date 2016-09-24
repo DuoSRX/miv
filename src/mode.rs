@@ -8,7 +8,7 @@ use point::Direction::{Up,Down,Left,Right};
 #[derive(PartialEq,Debug,Copy,Clone)]
 pub enum Mode {
     Insert,
-    Command
+    Normal
 }
 
 impl Mode {
@@ -18,7 +18,7 @@ impl Mode {
         match self {
             Mode::Insert => {
                 match key {
-                    Key::Esc  => Some(ChangeMode(Mode::Command)),
+                    Key::Esc  => Some(ChangeMode(Mode::Normal)),
                     Key::Backspace => Some(BackwardDelete),
                     Key::Enter => Some(NewLineAtPoint),
                     Key::Char(c) => Some(Insert(c)),
@@ -29,7 +29,7 @@ impl Mode {
                     _ => None
                 }
             },
-            Mode::Command => {
+            Mode::Normal => {
                 match key {
                     Key::Char('k') | Key::Up => Some(MoveCursor(Up)),
                     Key::Char('j') | Key::Down => Some(MoveCursor(Down)),
