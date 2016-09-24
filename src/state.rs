@@ -1,7 +1,7 @@
 extern crate rustbox;
 
-use std::fs::File;
 use std::io::Write;
+use std::fs::{File,OpenOptions};
 
 use mode::Mode;
 use point::{Direction,Point};
@@ -13,6 +13,7 @@ pub struct State {
     pub width: usize,
     pub height: usize,
     pub filepath: Option<String>, // the path of the file we're editing
+    pub status: Option<String>, // text to be displayed in the bottom bar
 }
 
 #[derive(PartialEq,Debug,Clone)]
@@ -38,6 +39,7 @@ impl State {
             width: width,
             height: height,
             filepath: None,
+            status: None,
         }
     }
 
@@ -54,14 +56,15 @@ impl State {
             Action::NewLineAtPoint => {
                 let mut buffer = self.buffer.clone();
                 let newline = buffer[self.cursor.y].split_off(self.cursor.x);
-                buffer.push(newline);
+                self.cursor.y += 1;
+                buffer.insert(self.cursor.y, newline);
                 self.buffer = buffer;
 
                 self.cursor.x = 0;
-                self.cursor.y += 1;
             }
             Action::NewLine => {
                 self.cursor.y += 1;
+                self.cursor.x = 0;
                 self.buffer.insert(self.cursor.y, Vec::new());
             }
             Action::Insert(c) => {
@@ -108,13 +111,19 @@ impl State {
         if self.filepath.is_none() { return } // TODO: choose filepath
 
         let path = self.filepath.clone().unwrap();
-        let mut f = File::create(path).unwrap();
+        let mut file = OpenOptions::new().read(true).write(true).create(true).open(path).unwrap();
+        //let mut f = File::create(path).unwrap();
         for line in self.buffer.iter() {
             for &c in line.iter() {
-                let _ = f.write_all(&[c as u8]);
+                let _ = file.write_all(&[c as u8]);
             }
-            let _ = f.write_all(&['\n' as u8]);
+            let _ = file.write_all(&['\n' as u8]);
         }
+
+        let status = format!("Saved \"{}\" ({} bytes)",
+                             self.filepath.clone().unwrap(),
+                             file.metadata().unwrap().len());
+        self.status = Some(status);
     }
 }
 

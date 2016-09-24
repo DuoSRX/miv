@@ -3,29 +3,12 @@ extern crate miv;
 
 use std::env;
 use std::io::Read;
-use std::fs::File;
+use std::fs::{File,OpenOptions};
 use rustbox::{Key,Color, RustBox};
 
 use miv::mode::{Mode};
 use miv::point::Point;
 use miv::state::State;
-
-fn buffer_from_file(path: String) -> Vec<Vec<char>> {
-    let mut file = File::open(path).unwrap();
-    let mut s = String::new();
-    let _ = file.read_to_string(&mut s);
-    let mut buf = Vec::new();
-
-    for line in s.lines() {
-        let mut l = Vec::with_capacity(line.len());
-        for c in line.chars() {
-            l.push(c);
-        }
-        buf.push(l)
-    }
-
-    buf
-}
 
 fn main() {
     let rustbox = RustBox::init(Default::default()).unwrap();
@@ -49,6 +32,7 @@ fn main() {
                     break;
                 }
                 let exit = state.handle_key(key);
+
                 if exit {
                     break;
                 }
@@ -58,6 +42,7 @@ fn main() {
         }
 
         render(&rustbox, &state);
+        state.status = None;
     }
 }
 
@@ -79,6 +64,7 @@ fn render(rustbox: &rustbox::RustBox, state: &State) {
 
     rustbox.set_cursor(state.cursor.x as isize, state.cursor.y as isize);
     print_mode(&rustbox, &state);
+    print_status(&rustbox, &state);
     rustbox.present();
 }
 
@@ -95,4 +81,31 @@ fn print_mode(rustbox: &rustbox::RustBox, state: &State) {
 
     rustbox.print(0, rustbox.height() - 1, rustbox::RB_BOLD, Color::White, Color::Black, mode);
     rustbox.print(rustbox.width() - 2 - coords.len(), rustbox.height() - 1, rustbox::RB_BOLD, Color::White, Color::Black, coords.as_ref());
+}
+
+fn print_status(rustbox: &rustbox::RustBox, state: &State) {
+    if let Some(status) = state.status.clone() {
+        rustbox.print(20, rustbox.height() - 1, rustbox::RB_BOLD, Color::White, Color::Black, status.as_ref());
+    }
+}
+
+fn buffer_from_file(path: String) -> Vec<Vec<char>> {
+    let mut file = File::open(path).unwrap();
+    let mut s = String::new();
+    let _ = file.read_to_string(&mut s);
+    let mut buf = Vec::new();
+
+    for line in s.lines() {
+        let mut l = Vec::with_capacity(line.len());
+        for c in line.chars() {
+            l.push(c);
+        }
+        buf.push(l)
+    }
+
+    if buf.len() == 0 {
+        buf.push(Vec::new());
+    }
+
+    buf
 }
