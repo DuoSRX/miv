@@ -1,5 +1,6 @@
 extern crate rustbox;
 
+use std::collections::HashMap;
 use rustbox::Key;
 use buffer::Buffer;
 use mode::{Mode,ModeType};
@@ -23,38 +24,37 @@ pub enum Action {
 }
 
 pub struct State {
-    pub mode: ModeType, // current mode
     pub cursor: Point,
     pub buffer: Buffer,
     pub width: usize,
     pub height: usize,
     pub status: Option<String>, // text to be displayed in the bottom bar
     pub keystrokes: Vec<Key>,
+    pub mode: ModeType, // current mode
 
-    insert_mode: Mode,
-    normal_mode: Mode,
+    modes: HashMap<ModeType, Mode>, // available modes
 }
 
 impl State {
     pub fn new(width: usize, height: usize) -> State {
+        let mut modes = HashMap::new();
+        modes.insert(ModeType::Insert, Mode::insert_mode());
+        modes.insert(ModeType::Normal, Mode::normal_mode());
+
         State {
             cursor: Point::new(0, 0),
             buffer: Buffer::new(),
             width: width,
             height: height,
             status: None,
+            modes: modes,
             mode: ModeType::Normal,
-            insert_mode: Mode::insert_mode(),
-            normal_mode: Mode::normal_mode(),
             keystrokes: Vec::new(),
         }
     }
 
-    fn mode(&self) -> &Mode {
-        match self.mode {
-            ModeType::Insert => &self.insert_mode,
-            ModeType::Normal => &self.normal_mode,
-        }
+    pub fn mode(&self) -> &Mode {
+        self.modes.get(&self.mode).expect(format!("Unknown mode {:?}", self.mode).as_ref())
     }
 
     pub fn handle_key(&mut self, key: rustbox::Key) -> bool {

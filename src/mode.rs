@@ -7,22 +7,23 @@ use state::Action;
 use state::Action::*;
 use point::Direction::{Up,Down,Left,Right};
 
-#[derive(Eq,PartialEq,Debug,Copy,Clone)]
+#[derive(Eq,PartialEq,Debug,Copy,Clone,Hash)]
 pub enum ModeType {
     Insert,
-    Normal
+    Normal,
 }
 
 pub struct Mode {
     keymap: KeyMap,
     default_action: fn(Key) -> Option<Action>,
+    pub display: String,
 }
 
 impl Mode {
     pub fn keys_pressed(&self, keys: &[rustbox::Key]) -> Option<Action> {
         match self.keymap.match_keys(keys) {
             KeyMatch::Action(action) => Some(action),
-            KeyMatch::Partial => { Some(Action::PartialKey) },
+            KeyMatch::Partial => Some(Action::PartialKey),
             KeyMatch::None => (self.default_action)(keys[0]),
         }
     }
@@ -48,11 +49,12 @@ impl Mode {
         Mode {
             keymap: km,
             default_action: f,
+            display: String::from("Insert mode"),
         }
     }
 
     pub fn normal_mode() -> Mode {
-        fn f(_: Key) -> Option<Action> { None };
+        fn f(_key: Key) -> Option<Action> { None };
 
         let mut km = KeyMap::new();
         km.bind(&[Key::Char('k')], MoveCursor(Up));
@@ -70,6 +72,7 @@ impl Mode {
         Mode {
             keymap: km,
             default_action: f,
+            display: String::from("Normal mode")
         }
     }
 }

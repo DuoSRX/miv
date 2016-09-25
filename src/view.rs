@@ -3,7 +3,6 @@ extern crate rustbox;
 use rustbox::{Color, RustBox};
 
 use keys::key_to_string;
-use mode::ModeType;
 use point::Point;
 use state::State;
 
@@ -60,10 +59,7 @@ impl<'a> View<'a> {
     }
 
     pub fn print_mode(&self, state: &State) {
-        let mode = match state.mode {
-            ModeType::Insert => "-- Insert Mode --",
-            ModeType::Normal => "-- Normal Mode --",
-        };
+        let mode = format!("-- {} --", state.mode().display);
         let coords = format!("{}:{}", state.cursor.y + 1, state.cursor.x);
 
         if !state.keystrokes.is_empty() {
@@ -73,7 +69,7 @@ impl<'a> View<'a> {
             self.rustbox.print(18, self.rustbox.height() - 1, rustbox::RB_BOLD, Color::White, Color::Black, keys.as_ref());
         }
 
-        self.rustbox.print(0, self.rustbox.height() - 1, rustbox::RB_BOLD, Color::White, Color::Black, mode);
+        self.rustbox.print(0, self.rustbox.height() - 1, rustbox::RB_BOLD, Color::White, Color::Black, mode.as_ref());
         self.rustbox.print(self.rustbox.width() - 2 - coords.len(), self.rustbox.height() - 1, rustbox::RB_BOLD, Color::White, Color::Black, coords.as_ref());
     }
 
