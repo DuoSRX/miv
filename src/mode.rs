@@ -65,6 +65,7 @@ impl Mode {
         km.bind(&[Key::Char('i')], ChangeMode(ModeType::Insert));
         km.bind(&[Key::Char('x')], Delete);
         km.bind(&[Key::Char('p')], Paste);
+        km.bind(&[Key::Char('.')], Repeat);
         km.bind(&[Key::Char('q')], Quit);
         km.bind(&[Key::Ctrl('c')], Quit);
         km.bind(&[Key::Ctrl('s')], Save);

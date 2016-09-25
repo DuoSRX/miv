@@ -19,6 +19,7 @@ pub enum Action {
     MoveCursor(Direction),
     PartialKey,
     Paste,
+    Repeat,
     Save,
     Quit,
     // Multi(Vec<Action>),
@@ -35,6 +36,7 @@ pub struct State {
 
     yanked: VecDeque<Vec<char>>,
     modes: HashMap<ModeType, Mode>, // available modes
+    previous_action: Option<Action>,
 }
 
 impl State {
@@ -53,6 +55,7 @@ impl State {
             mode: ModeType::Normal,
             keystrokes: Vec::new(),
             yanked: VecDeque::new(),
+            previous_action: None,
         }
     }
 
@@ -72,6 +75,11 @@ impl State {
 
     fn execute_action(&mut self, action: Action) -> bool {
         match action {
+            Action::Repeat => {
+                if let Some(action) = self.previous_action.clone() {
+                    self.execute_action(action);
+                }
+            }
             Action::NewLineAtPoint => {
                 self.buffer.split_line(self.cursor);
                 self.move_cursor(Down);
@@ -140,6 +148,7 @@ impl State {
             //     }
             // }
         }
+        if action != Action::Repeat { self.previous_action = Some(action); }
         self.keystrokes = Vec::new();
         false
     }
