@@ -4,7 +4,7 @@ use buffer::Buffer;
 use mode::Mode;
 use point::{Direction,Point};
 
-#[derive(PartialEq,Debug,Clone)]
+#[derive(Eq,PartialEq,Debug,Clone)]
 pub enum Action {
     BackwardDelete,
     ChangeMode(Mode),

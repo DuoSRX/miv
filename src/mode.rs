@@ -5,7 +5,8 @@ use rustbox::Key;
 use state::Action;
 use point::Direction::{Up,Down,Left,Right};
 
-#[derive(PartialEq,Debug,Copy,Clone)]
+
+#[derive(Eq,PartialEq,Debug,Copy,Clone)]
 pub enum Mode {
     Insert,
     Normal
