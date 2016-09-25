@@ -72,6 +72,14 @@ impl KeyMap {
     }
 }
 
+pub fn key_to_string(key: Key) -> Option<String> {
+    match key {
+        Key::Char(c) => Some(c.to_string()),
+        Key::Ctrl(c) => Some(format!("<C-{}>", c)),
+        _ => None,
+    }
+}
+
 #[cfg(test)]
 pub mod test {
     extern crate rustbox;

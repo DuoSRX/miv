@@ -1,5 +1,5 @@
 use std::io::{Read, Write};
-use std::fs::{File, OpenOptions};
+use std::fs::OpenOptions;
 
 use point::Point;
 

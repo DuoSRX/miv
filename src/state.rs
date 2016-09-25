@@ -29,10 +29,10 @@ pub struct State {
     pub width: usize,
     pub height: usize,
     pub status: Option<String>, // text to be displayed in the bottom bar
+    pub keystrokes: Vec<Key>,
 
     insert_mode: Mode,
     normal_mode: Mode,
-    keystrokes: Vec<Key>,
 }
 
 impl State {
@@ -78,6 +78,7 @@ impl State {
                 self.buffer.new_line(self.cursor);
                 self.move_cursor(Down);
                 self.move_cursor(BeginningOfLine);
+                self.mode = ModeType::Insert;
             }
             Action::Insert(c) => {
                 self.buffer.insert(self.cursor, c);
