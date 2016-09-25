@@ -1,5 +1,6 @@
 extern crate rustbox;
 
+use rustbox::Key;
 use buffer::Buffer;
 use mode::{Mode,ModeType};
 use point::{Direction,Point};
@@ -9,10 +10,12 @@ pub enum Action {
     BackwardDelete,
     ChangeMode(ModeType),
     Delete,
+    DeleteLine,
     Insert(char),
     NewLine,
     NewLineAtPoint,
     MoveCursor(Direction),
+    PartialKey,
     Save,
     Quit,
     // Multi(Vec<Action>),
@@ -28,6 +31,7 @@ pub struct State {
 
     insert_mode: Mode,
     normal_mode: Mode,
+    keystrokes: Vec<Key>,
 }
 
 impl State {
@@ -41,6 +45,7 @@ impl State {
             mode: ModeType::Normal,
             insert_mode: Mode::insert_mode(),
             normal_mode: Mode::normal_mode(),
+            keystrokes: Vec::new(),
         }
     }
 
@@ -52,10 +57,12 @@ impl State {
     }
 
     pub fn handle_key(&mut self, key: rustbox::Key) -> bool {
-        if let Some(action) = self.mode().key_pressed(key) {
-            self.execute_action(action)
-        } else {
-            false
+        self.keystrokes.push(key);
+
+        match self.mode().keys_pressed(self.keystrokes.as_slice()) {
+            Some(Action::PartialKey) => false,
+            Some(action) => self.execute_action(action),
+            None => { self.keystrokes = Vec::new(); false }
         }
     }
 
@@ -78,6 +85,10 @@ impl State {
             Action::Delete => {
                 self.buffer.delete(self.cursor);
             }
+            Action::DeleteLine => {
+                self.buffer.delete_line(self.cursor);
+                self.cursor.x = 0;
+            }
             Action::BackwardDelete => {
                 self.cursor.x -= 1;
                 self.buffer.delete(self.cursor);
@@ -86,7 +97,6 @@ impl State {
                 self.move_cursor(direction);
             }
             Action::ChangeMode(mode) => self.mode = mode,
-            //Action::ChangeMode(ModeType::Normal) => self.current_mode = self.normal_mode,
             Action::Save => {
                 let bytes = self.buffer.save_file();
                 if bytes > 0 {
@@ -96,12 +106,14 @@ impl State {
                 }
             }
             Action::Quit => { return true },
+            _ => {},
             // Action::Multi(actions) => {
             //     for action in actions.iter() {
             //         self.execute_action(action.clone());
             //     }
             // }
         }
+        self.keystrokes = Vec::new();
         false
     }
 

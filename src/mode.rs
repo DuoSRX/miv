@@ -19,11 +19,11 @@ pub struct Mode {
 }
 
 impl Mode {
-    pub fn key_pressed(&self, key: rustbox::Key) -> Option<Action> {
-        match self.keymap.match_keys(&[key]) {
+    pub fn keys_pressed(&self, keys: &[rustbox::Key]) -> Option<Action> {
+        match self.keymap.match_keys(keys) {
             KeyMatch::Action(action) => Some(action),
-            KeyMatch::Partial => { panic!() },
-            KeyMatch::None => (self.default_action)(key),
+            KeyMatch::Partial => { Some(Action::PartialKey) },
+            KeyMatch::None => (self.default_action)(keys[0]),
         }
     }
 
@@ -64,6 +64,7 @@ impl Mode {
         km.bind(&[Key::Char('q')], Quit);
         km.bind(&[Key::Ctrl('c')], Quit);
         km.bind(&[Key::Ctrl('s')], Save);
+        km.bind(&[Key::Char('d'), Key::Char('d')], DeleteLine);
 
         Mode {
             keymap: km,

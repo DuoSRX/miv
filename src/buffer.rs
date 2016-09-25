@@ -35,6 +35,10 @@ impl Buffer {
         self.data.insert(location.y + 1, Vec::new());
     }
 
+    pub fn delete_line(&mut self, location: Point) {
+        self.data.remove(location.y);
+    }
+
     pub fn split_line(&mut self, location: Point) {
         let newline = self.data[location.y].split_off(location.x);
         self.data.insert(location.y + 1, newline);
