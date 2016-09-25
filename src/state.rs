@@ -1,6 +1,6 @@
 extern crate rustbox;
 
-use std::collections::HashMap;
+use std::collections::{HashMap,VecDeque};
 use rustbox::Key;
 use buffer::Buffer;
 use mode::{Mode,ModeType};
@@ -18,6 +18,7 @@ pub enum Action {
     NewLineAtPoint,
     MoveCursor(Direction),
     PartialKey,
+    Paste,
     Save,
     Quit,
     // Multi(Vec<Action>),
@@ -32,6 +33,7 @@ pub struct State {
     pub keystrokes: Vec<Key>,
     pub mode: ModeType, // current mode
 
+    yanked: VecDeque<Vec<char>>,
     modes: HashMap<ModeType, Mode>, // available modes
 }
 
@@ -50,6 +52,7 @@ impl State {
             modes: modes,
             mode: ModeType::Normal,
             keystrokes: Vec::new(),
+            yanked: VecDeque::new(),
         }
     }
 
@@ -85,15 +88,37 @@ impl State {
                 self.move_cursor(Right);
             }
             Action::Delete => {
-                self.buffer.delete(self.cursor);
+                let character = self.buffer.delete(self.cursor);
+                self.yanked.push_front(vec!(character));
             }
             Action::DeleteLine => {
-                self.buffer.delete_line(self.cursor);
+                let line = self.buffer.delete_line(self.cursor);
+                self.yanked.push_front(line);
                 self.move_cursor(BeginningOfLine);
             }
             Action::BackwardDelete => {
                 self.move_cursor(Left);
                 self.buffer.delete(self.cursor);
+            }
+            Action::Paste => {
+                if self.yanked.is_empty() {
+                    self.status = Some("Nothing to paste!".to_string());
+                } else {
+                    let mut yanked = self.yanked.front().unwrap().clone();
+
+                    if yanked.iter().any(|&c| c == '\n') {
+                        self.buffer.new_line(self.cursor);
+                        self.move_cursor(Down);
+                        self.move_cursor(BeginningOfLine);
+                        // Remove the \n
+                        let last = yanked.len() - 1;
+                        yanked.remove(last);
+                    } else {
+                        self.move_cursor(Right);
+                    }
+
+                    self.buffer.insert_text(self.cursor, yanked);
+                }
             }
             Action::MoveCursor(direction) => {
                 self.move_cursor(direction);

@@ -17,26 +17,25 @@ impl Buffer {
     }
 
     pub fn insert(&mut self, location: Point, c: char) {
-        let line = &mut self.data[location.y];
-        let x = location.x + 1;
+        self.data[location.y].insert(location.x, c);
+    }
 
-        if x > line.len() {
-            line.push(c);
-        } else {
-            line.insert(x, c);
+    pub fn delete(&mut self, location: Point) -> char {
+        self.data[location.y].remove(location.x)
+    }
+
+    pub fn insert_text(&mut self, location: Point, chars: Vec<char>) {
+        for (x, &c) in chars.iter().enumerate() {
+            self.data[location.y].insert(x + location.x, c);
         }
     }
 
-    pub fn delete(&mut self, location: Point) {
-        self.data[location.y].remove(location.x);
-    }
-
     pub fn new_line(&mut self, location: Point) {
-        self.data.insert(location.y + 1, Vec::new());
+        self.data.insert(location.y + 1, vec!('\n'));
     }
 
-    pub fn delete_line(&mut self, location: Point) {
-        self.data.remove(location.y);
+    pub fn delete_line(&mut self, location: Point) -> Vec<char> {
+        self.data.remove(location.y)
     }
 
     pub fn split_line(&mut self, location: Point) {
@@ -55,6 +54,7 @@ impl Buffer {
             for c in line.chars() {
                 l.push(c);
             }
+            l.push('\n');
             buf.push(l)
         }
 
@@ -74,7 +74,6 @@ impl Buffer {
             for &c in line.iter() {
                 let _ = file.write_all(&[c as u8]);
             }
-            let _ = file.write_all(&[b'\n']);
         }
 
         file.metadata().unwrap().len()
