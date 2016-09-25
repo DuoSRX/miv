@@ -4,6 +4,7 @@ use rustbox::Key;
 use buffer::Buffer;
 use mode::{Mode,ModeType};
 use point::{Direction,Point};
+use point::Direction::*;
 
 #[derive(Eq,PartialEq,Debug,Clone)]
 pub enum Action {
@@ -70,27 +71,27 @@ impl State {
         match action {
             Action::NewLineAtPoint => {
                 self.buffer.split_line(self.cursor);
-                self.cursor.y += 1;
-                self.cursor.x = 0;
+                self.move_cursor(Down);
+                self.move_cursor(BeginningOfLine);
             }
             Action::NewLine => {
                 self.buffer.new_line(self.cursor);
-                self.cursor.y += 1;
-                self.cursor.x = 0;
+                self.move_cursor(Down);
+                self.move_cursor(BeginningOfLine);
             }
             Action::Insert(c) => {
                 self.buffer.insert(self.cursor, c);
-                self.cursor.x += 1;
+                self.move_cursor(Right);
             }
             Action::Delete => {
                 self.buffer.delete(self.cursor);
             }
             Action::DeleteLine => {
                 self.buffer.delete_line(self.cursor);
-                self.cursor.x = 0;
+                self.move_cursor(BeginningOfLine);
             }
             Action::BackwardDelete => {
-                self.cursor.x -= 1;
+                self.move_cursor(Left);
                 self.buffer.delete(self.cursor);
             }
             Action::MoveCursor(direction) => {
@@ -120,7 +121,7 @@ impl State {
     pub fn move_cursor(&mut self, direction: Direction) {
         let p = self.cursor.with_direction(direction);
 
-        if p.x < self.width && p.y < self.height {
+        if p.x < self.width {
             self.cursor = p;
         }
     }

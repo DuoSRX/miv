@@ -16,10 +16,17 @@ impl Point {
             Up => Point { x: self.x, y: self.y - 1 },
             Down => Point { x: self.x, y: self.y + 1 },
             Left => Point { x: self.x - 1, y: self.y },
-            Right => Point { x: self.x + 1, y: self.y  }
+            Right => Point { x: self.x + 1, y: self.y },
+            BeginningOfLine => Point { x: 0, y: self.y },
         }
     }
 }
 
 #[derive(PartialEq,Eq,Copy,Clone,Debug)]
-pub enum Direction { Up, Down, Left, Right }
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+    BeginningOfLine,
+}

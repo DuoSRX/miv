@@ -9,7 +9,7 @@ use miv::view::View;
 
 fn main() {
     let rustbox = RustBox::init(Default::default()).unwrap();
-    let view = View::new(&rustbox);
+    let mut view = View::new(&rustbox);
 
     let mut state = State::new(rustbox.width(), rustbox.height());
 

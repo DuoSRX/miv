@@ -59,6 +59,7 @@ impl Mode {
         km.bind(&[Key::Char('j')], MoveCursor(Down));
         km.bind(&[Key::Char('h')], MoveCursor(Left));
         km.bind(&[Key::Char('l')], MoveCursor(Right));
+        km.bind(&[Key::Char('o')], NewLine);
         km.bind(&[Key::Char('i')], ChangeMode(ModeType::Insert));
         km.bind(&[Key::Char('x')], Delete);
         km.bind(&[Key::Char('q')], Quit);

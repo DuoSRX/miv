@@ -7,7 +7,8 @@ use point::Point;
 use state::State;
 
 pub struct View<'a> {
-    rustbox: &'a RustBox
+    rustbox: &'a RustBox,
+    top_line: usize,
 }
 
 impl<'a> View<'a> {
@@ -17,13 +18,24 @@ impl<'a> View<'a> {
         }
     }
 
-    pub fn render(&self, state: &State) {
+    pub fn relative_cursor(&self, cursor: Point) -> Point {
+        Point { x: cursor.x, y: cursor.y - self.top_line }
+    }
+
+    pub fn render(&mut self, state: &State) {
         let mut x = 0;
         let mut y = 0;
+        let height = state.height - 2; // Room for the status line
+
+        if state.cursor.y < self.top_line {
+            self.top_line = state.cursor.y;
+        } else if state.cursor.y > height + self.top_line {
+            self.top_line = state.cursor.y - height;
+        }
 
         self.rustbox.clear();
 
-        for line in &state.buffer.data {
+        for line in state.buffer.data.iter().skip(self.top_line) {
             for &c in line.iter() {
                 if c == '\n' { continue };
                 self.print_at(Point::new(x, y), c);
@@ -33,7 +45,8 @@ impl<'a> View<'a> {
             x = 0;
         }
 
-        self.rustbox.set_cursor(state.cursor.x as isize, state.cursor.y as isize);
+        let cursor = self.relative_cursor(state.cursor);
+        self.rustbox.set_cursor(cursor.x as isize, cursor.y as isize);
         self.print_mode(state);
         self.print_status(state);
         self.rustbox.present();
