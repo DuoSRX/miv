@@ -45,7 +45,7 @@ impl Buffer {
     }
 
     pub fn load_file(&mut self, path: String) {
-        let mut file = File::open(path).unwrap();
+        let mut file = OpenOptions::new().read(true).write(true).create(true).open(path).unwrap();
         let mut s = String::new();
         let _ = file.read_to_string(&mut s);
         let mut buf = Vec::new();

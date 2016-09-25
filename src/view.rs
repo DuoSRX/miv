@@ -14,7 +14,8 @@ pub struct View<'a> {
 impl<'a> View<'a> {
     pub fn new(rustbox: &'a RustBox) -> View {
         View {
-            rustbox: rustbox
+            rustbox: rustbox,
+            top_line: 0,
         }
     }
 
