@@ -1,13 +1,13 @@
 extern crate rustbox;
 
 use buffer::Buffer;
-use mode::Mode;
+use mode::{Mode,ModeType};
 use point::{Direction,Point};
 
 #[derive(Eq,PartialEq,Debug,Clone)]
 pub enum Action {
     BackwardDelete,
-    ChangeMode(Mode),
+    ChangeMode(ModeType),
     Delete,
     Insert(char),
     NewLine,
@@ -15,32 +15,44 @@ pub enum Action {
     MoveCursor(Direction),
     Save,
     Quit,
-    Multi(Vec<Action>),
+    // Multi(Vec<Action>),
 }
 
 pub struct State {
-    pub mode: Mode,
+    pub mode: ModeType, // current mode
     pub cursor: Point,
     pub buffer: Buffer,
     pub width: usize,
     pub height: usize,
     pub status: Option<String>, // text to be displayed in the bottom bar
+
+    insert_mode: Mode,
+    normal_mode: Mode,
 }
 
 impl State {
     pub fn new(width: usize, height: usize) -> State {
         State {
-            mode: Mode::Normal,
             cursor: Point::new(0, 0),
             buffer: Buffer::new(),
             width: width,
             height: height,
             status: None,
+            mode: ModeType::Normal,
+            insert_mode: Mode::insert_mode(),
+            normal_mode: Mode::normal_mode(),
+        }
+    }
+
+    fn mode(&self) -> &Mode {
+        match self.mode {
+            ModeType::Insert => &self.insert_mode,
+            ModeType::Normal => &self.normal_mode,
         }
     }
 
     pub fn handle_key(&mut self, key: rustbox::Key) -> bool {
-        if let Some(action) = self.mode.key_pressed(key) {
+        if let Some(action) = self.mode().key_pressed(key) {
             self.execute_action(action)
         } else {
             false
@@ -74,6 +86,7 @@ impl State {
                 self.move_cursor(direction);
             }
             Action::ChangeMode(mode) => self.mode = mode,
+            //Action::ChangeMode(ModeType::Normal) => self.current_mode = self.normal_mode,
             Action::Save => {
                 let bytes = self.buffer.save_file();
                 if bytes > 0 {
@@ -83,11 +96,11 @@ impl State {
                 }
             }
             Action::Quit => { return true },
-            Action::Multi(actions) => {
-                for action in actions.iter() {
-                    self.execute_action(action.clone());
-                }
-            }
+            // Action::Multi(actions) => {
+            //     for action in actions.iter() {
+            //         self.execute_action(action.clone());
+            //     }
+            // }
         }
         false
     }
@@ -100,4 +113,3 @@ impl State {
         }
     }
 }
-

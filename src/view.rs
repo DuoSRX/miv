@@ -2,7 +2,7 @@ extern crate rustbox;
 
 use rustbox::{Color, RustBox};
 
-use mode::Mode;
+use mode::ModeType;
 use point::Point;
 use state::State;
 
@@ -23,7 +23,7 @@ impl<'a> View<'a> {
 
         self.rustbox.clear();
 
-        for line in state.buffer.data.iter() {
+        for line in &state.buffer.data {
             for &c in line.iter() {
                 if c == '\n' { continue };
                 self.print_at(Point::new(x, y), c);
@@ -34,8 +34,8 @@ impl<'a> View<'a> {
         }
 
         self.rustbox.set_cursor(state.cursor.x as isize, state.cursor.y as isize);
-        self.print_mode(&state);
-        self.print_status(&state);
+        self.print_mode(state);
+        self.print_status(state);
         self.rustbox.present();
     }
 
@@ -46,8 +46,8 @@ impl<'a> View<'a> {
 
     pub fn print_mode(&self, state: &State) {
         let mode = match state.mode {
-            Mode::Insert => "-- Insert Mode --",
-            Mode::Normal => "-- Normal Mode --",
+            ModeType::Insert => "-- Insert Mode --",
+            ModeType::Normal => "-- Normal Mode --",
         };
         let coords = format!("{}:{}", state.cursor.y + 1, state.cursor.x);
 

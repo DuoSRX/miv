@@ -17,7 +17,7 @@ impl Buffer {
     }
 
     pub fn insert(&mut self, location: Point, c: char) {
-        let ref mut line = self.data[location.y];
+        let line = &mut self.data[location.y];
         let x = location.x + 1;
 
         if x > line.len() {
@@ -36,14 +36,8 @@ impl Buffer {
     }
 
     pub fn split_line(&mut self, location: Point) {
-        // let mut buffer = self.buffer.clone();
         let newline = self.data[location.y].split_off(location.x);
         self.data.insert(location.y + 1, newline);
-        // self.cursor.y += 1;
-        // buffer.insert(self.cursor.y, newline);
-        // self.buffer = buffer;
-        // self.cursor.y += 1;
-        // self.cursor.x = 0;
     }
 
     pub fn load_file(&mut self, path: String) {
@@ -60,7 +54,7 @@ impl Buffer {
             buf.push(l)
         }
 
-        if buf.len() == 0 {
+        if buf.is_empty() {
             buf.push(Vec::new());
         }
 
@@ -72,11 +66,11 @@ impl Buffer {
 
         let path = self.filepath.clone().unwrap();
         let mut file = OpenOptions::new().read(true).write(true).create(true).open(path).unwrap();
-        for line in self.data.iter() {
+        for line in &self.data {
             for &c in line.iter() {
                 let _ = file.write_all(&[c as u8]);
             }
-            let _ = file.write_all(&['\n' as u8]);
+            let _ = file.write_all(&[b'\n']);
         }
 
         file.metadata().unwrap().len()
