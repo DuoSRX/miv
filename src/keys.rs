@@ -82,6 +82,8 @@ impl KeyMap {
         self.bind(&[Key::Down], MoveCursor(Down));
         self.bind(&[Key::Left], MoveCursor(Left));
         self.bind(&[Key::Right], MoveCursor(Right));
+        self.bind(&[Key::Ctrl('c')], Quit);
+        self.bind(&[Key::Ctrl('x'), Key::Ctrl('c')], Quit); // Yay Emacs!
     }
 }
 
