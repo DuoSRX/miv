@@ -17,6 +17,7 @@ pub enum ModeType {
 pub struct Mode {
     keymap: KeyMap,
     default_action: fn(Key) -> Option<Action>,
+    pub color: u16,
     pub display: String,
 }
 
@@ -57,7 +58,8 @@ impl Mode {
         Mode {
             keymap: km,
             default_action: f,
-            display: String::from("Normal mode")
+            display: String::from("NORMAL"),
+            color: 220,
         }
     }
 
@@ -78,7 +80,8 @@ impl Mode {
         Mode {
             keymap: km,
             default_action: f,
-            display: String::from("Insert mode"),
+            display: String::from("INSERT"),
+            color: 2,
         }
     }
 
@@ -99,7 +102,8 @@ impl Mode {
         Mode {
             keymap: km,
             default_action: f,
-            display: String::from("Replace mode"),
+            display: String::from("REPLACE"),
+            color: 160,
         }
     }
 }
