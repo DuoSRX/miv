@@ -1,6 +1,7 @@
 extern crate rustbox;
 
 use std::collections::{HashMap,VecDeque};
+use std::usize;
 use rustbox::Key;
 use buffer::Buffer;
 use mode::{Mode,ModeType};
@@ -138,12 +139,17 @@ impl State {
 
     pub fn move_cursor(&mut self, direction: Direction) {
         let mut cur = self.cursor.with_direction(direction);
+
+        match direction {
+            EndOfLine => { cur.x = usize::max_value() } // This is so ugly...
+            EndOfFile => { cur.y = self.buffer.line_len() - 1 }
+            _ => {}
+        }
+
         cur.x = self.buffer.last_non_empty_col(cur);
 
-        if cur.x < self.width {
-            self.cursor = cur;
-            self.last_col = cur.y;
-        }
+        self.cursor = cur;
+        self.last_col = cur.y;
     }
 
     fn paste(&mut self) {

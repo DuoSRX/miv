@@ -23,6 +23,7 @@ impl Point {
             Left => self.offset(-1, 0),
             Right => self.offset(1, 0),
             BeginningOfLine => Point::new(0, self.y),
+            BeginningOfFile => Point::new(0, 0),
             _ => self.clone(),
         }
     }
@@ -42,4 +43,6 @@ pub enum Direction {
     Right,
     BeginningOfLine,
     EndOfLine,
+    BeginningOfFile,
+    EndOfFile,
 }

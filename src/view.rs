@@ -53,7 +53,6 @@ impl<'a> View<'a> {
         self.rustbox.present();
     }
 
-
     pub fn print_at(&self, point: Point, character: char) {
         self.rustbox.print_char(point.x, point.y, rustbox::RB_NORMAL, Color::White, Color::Black, character);
     }

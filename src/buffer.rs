@@ -17,6 +17,11 @@ impl Buffer {
         }
     }
 
+    // Number of line in the buffer (minimum 1)
+    pub fn line_len(&self) -> usize {
+        cmp::max(1, self.data.len())
+    }
+
     pub fn line_at(&mut self, y: usize) -> Option<&Vec<char>> {
         self.data.get(y)
     }
