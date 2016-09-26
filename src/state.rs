@@ -22,7 +22,6 @@ pub enum Action {
     Repeat,
     Save,
     Quit,
-    // Multi(Vec<Action>),
 }
 
 pub struct State {
@@ -142,11 +141,6 @@ impl State {
             }
             Action::Quit => { return true },
             _ => {},
-            // Action::Multi(actions) => {
-            //     for action in actions.iter() {
-            //         self.execute_action(action.clone());
-            //     }
-            // }
         }
         if action != Action::Repeat { self.previous_action = Some(action); }
         self.keystrokes = Vec::new();
