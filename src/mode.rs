@@ -38,13 +38,9 @@ impl Mode {
         }
 
         let mut km = KeyMap::new();
-        km.bind(&[Key::Esc], ChangeMode(ModeType::Normal));
+        km.bind_defaults();
         km.bind(&[Key::Backspace], BackwardDelete);
         km.bind(&[Key::Enter], NewLineAtPoint);
-        km.bind(&[Key::Up], MoveCursor(Up));
-        km.bind(&[Key::Down], MoveCursor(Down));
-        km.bind(&[Key::Left], MoveCursor(Left));
-        km.bind(&[Key::Right], MoveCursor(Right));
 
         Mode {
             keymap: km,
@@ -57,10 +53,7 @@ impl Mode {
         fn f(_key: Key) -> Option<Action> { None };
 
         let mut km = KeyMap::new();
-        km.bind(&[Key::Up], MoveCursor(Up));
-        km.bind(&[Key::Down], MoveCursor(Down));
-        km.bind(&[Key::Left], MoveCursor(Left));
-        km.bind(&[Key::Right], MoveCursor(Right));
+        km.bind_defaults();
         km.bind(&[Key::Char('k')], MoveCursor(Up));
         km.bind(&[Key::Char('j')], MoveCursor(Down));
         km.bind(&[Key::Char('h')], MoveCursor(Left));

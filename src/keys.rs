@@ -1,8 +1,11 @@
 extern crate rustbox;
-use std::collections::HashMap;
 use rustbox::Key;
-use state::Action;
+use std::collections::HashMap;
 use std::mem;
+
+use state::Action;
+use state::Action::*;
+use point::Direction::*;
 
 #[derive(PartialEq,Eq,Debug)]
 pub enum KeyMap {
@@ -18,7 +21,9 @@ pub enum KeyMatch {
 }
 
 impl KeyMap {
-    pub fn new() -> KeyMap { KeyMap::Node(HashMap::new()) }
+    pub fn new() -> KeyMap {
+        KeyMap::Node(HashMap::new())
+    }
 
     pub fn bind(&mut self, keys: &[Key], action: Action) {
         let new_map = match mem::replace(self, KeyMap::new()) {
@@ -69,6 +74,14 @@ impl KeyMap {
             }
             KeyMap::Action(ref action) => KeyMatch::Action(action.clone()),
         }
+    }
+
+    pub fn bind_defaults(&mut self) {
+        self.bind(&[Key::Esc], Cancel);
+        self.bind(&[Key::Up], MoveCursor(Up));
+        self.bind(&[Key::Down], MoveCursor(Down));
+        self.bind(&[Key::Left], MoveCursor(Left));
+        self.bind(&[Key::Right], MoveCursor(Right));
     }
 }
 

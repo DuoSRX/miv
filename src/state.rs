@@ -11,6 +11,7 @@ use point::Direction::*;
 #[derive(Eq,PartialEq,Debug,Clone)]
 pub enum Action {
     BackwardDelete,
+    Cancel,
     ChangeMode(ModeType),
     Delete,
     DeleteLine,
@@ -122,6 +123,10 @@ impl State {
                 self.move_cursor(direction);
             }
             Action::ChangeMode(mode) => self.mode = mode,
+            Action::Cancel => {
+                self.mode = ModeType::Normal;
+                self.keystrokes = Vec::new();
+            }
             Action::Save => {
                 let bytes = self.buffer.save_file();
                 if bytes > 0 {
@@ -138,7 +143,11 @@ impl State {
             Action::Quit => { return true },
             _ => {},
         }
-        if action != Action::Repeat { self.previous_action = Some(action); }
+
+        if action != Action::Repeat && action != Action::Cancel {
+            self.previous_action = Some(action);
+        }
+
         self.keystrokes = Vec::new();
         false
     }
