@@ -22,6 +22,7 @@ pub enum Action {
     PartialKey,
     Paste,
     Repeat,
+    Replace(char),
     Save,
     Quit,
     YankLine,
@@ -47,6 +48,7 @@ impl State {
         let mut modes = HashMap::new();
         modes.insert(ModeType::Insert, Mode::insert_mode());
         modes.insert(ModeType::Normal, Mode::normal_mode());
+        modes.insert(ModeType::Replace, Mode::replace_mode());
 
         State {
             cursor: Point::new(0, 0),
@@ -97,6 +99,10 @@ impl State {
             }
             Action::Insert(c) => {
                 self.buffer.insert(self.cursor, c);
+                self.move_cursor(Right);
+            }
+            Action::Replace(c) => {
+                self.buffer.upsert(self.cursor, c);
                 self.move_cursor(Right);
             }
             Action::Delete => {

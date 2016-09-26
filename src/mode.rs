@@ -11,6 +11,7 @@ use point::Direction::*;
 pub enum ModeType {
     Insert,
     Normal,
+    Replace
 }
 
 pub struct Mode {
@@ -25,6 +26,38 @@ impl Mode {
             KeyMatch::Action(action) => Some(action),
             KeyMatch::Partial => Some(Action::PartialKey),
             KeyMatch::None => (self.default_action)(keys[0]),
+        }
+    }
+
+    pub fn normal_mode() -> Mode {
+        fn f(_key: Key) -> Option<Action> { None };
+
+        let mut km = KeyMap::new();
+        km.bind_defaults();
+        km.bind(&[Key::Char('k')], MoveCursor(Up));
+        km.bind(&[Key::Char('j')], MoveCursor(Down));
+        km.bind(&[Key::Char('h')], MoveCursor(Left));
+        km.bind(&[Key::Char('l')], MoveCursor(Right));
+        km.bind(&[Key::Char('o')], NewLine);
+        km.bind(&[Key::Char('i')], ChangeMode(ModeType::Insert));
+        km.bind(&[Key::Char('R')], ChangeMode(ModeType::Replace));
+        km.bind(&[Key::Char('x')], Delete);
+        km.bind(&[Key::Char('p')], Paste);
+        km.bind(&[Key::Char('.')], Repeat);
+        km.bind(&[Key::Char('0')], MoveCursor(BeginningOfLine));
+        km.bind(&[Key::Char('$')], MoveCursor(EndOfLine));
+        km.bind(&[Key::Char('G')], MoveCursor(EndOfFile));
+        km.bind(&[Key::Char('g'), Key::Char('g')], MoveCursor(BeginningOfFile));
+        km.bind(&[Key::Char('y'), Key::Char('y')], YankLine);
+        km.bind(&[Key::Char('q')], Quit);
+        km.bind(&[Key::Ctrl('c')], Quit);
+        km.bind(&[Key::Ctrl('s')], Save);
+        km.bind(&[Key::Char('d'), Key::Char('d')], DeleteLine);
+
+        Mode {
+            keymap: km,
+            default_action: f,
+            display: String::from("Normal mode")
         }
     }
 
@@ -49,34 +82,24 @@ impl Mode {
         }
     }
 
-    pub fn normal_mode() -> Mode {
-        fn f(_key: Key) -> Option<Action> { None };
+    pub fn replace_mode() -> Mode {
+        fn f(key: Key) -> Option<Action> {
+            if let Key::Char(c) = key {
+                Some(Action::Replace(c))
+            } else {
+                None
+            }
+        }
 
         let mut km = KeyMap::new();
         km.bind_defaults();
-        km.bind(&[Key::Char('k')], MoveCursor(Up));
-        km.bind(&[Key::Char('j')], MoveCursor(Down));
-        km.bind(&[Key::Char('h')], MoveCursor(Left));
-        km.bind(&[Key::Char('l')], MoveCursor(Right));
-        km.bind(&[Key::Char('o')], NewLine);
-        km.bind(&[Key::Char('i')], ChangeMode(ModeType::Insert));
-        km.bind(&[Key::Char('x')], Delete);
-        km.bind(&[Key::Char('p')], Paste);
-        km.bind(&[Key::Char('.')], Repeat);
-        km.bind(&[Key::Char('0')], MoveCursor(BeginningOfLine));
-        km.bind(&[Key::Char('$')], MoveCursor(EndOfLine));
-        km.bind(&[Key::Char('G')], MoveCursor(EndOfFile));
-        km.bind(&[Key::Char('g'), Key::Char('g')], MoveCursor(BeginningOfFile));
-        km.bind(&[Key::Char('y'), Key::Char('y')], YankLine);
-        km.bind(&[Key::Char('q')], Quit);
-        km.bind(&[Key::Ctrl('c')], Quit);
-        km.bind(&[Key::Ctrl('s')], Save);
-        km.bind(&[Key::Char('d'), Key::Char('d')], DeleteLine);
+        km.bind(&[Key::Backspace], MoveCursor(Left));
+        km.bind(&[Key::Enter], NewLineAtPoint);
 
         Mode {
             keymap: km,
             default_action: f,
-            display: String::from("Normal mode")
+            display: String::from("Replace mode"),
         }
     }
 }

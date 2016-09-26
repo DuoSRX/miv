@@ -44,6 +44,20 @@ impl Buffer {
         self.data[location.y].insert(location.x, c);
     }
 
+    pub fn replace(&mut self, location: Point, c: char) {
+        self.data[location.y][location.x] = c;
+    }
+
+    pub fn upsert(&mut self, location: Point, c: char) {
+        let existing = self.data[location.y][location.x];
+
+        if existing == '\n' {
+            self.insert(location, c)
+        } else {
+            self.data[location.y][location.x] = c;
+        }
+    }
+
     pub fn delete(&mut self, location: Point) -> char {
         self.data[location.y].remove(location.x)
     }
