@@ -23,10 +23,11 @@ impl Point {
             Left => self.offset(-1, 0),
             Right => self.offset(1, 0),
             BeginningOfLine => Point::new(0, self.y),
+            _ => self.clone(),
         }
     }
 
-    fn offset(&self, dx: isize, dy: isize) -> Point {
+    pub fn offset(&self, dx: isize, dy: isize) -> Point {
         let x = self.x as isize + dx;
         let y = self.y as isize + dy;
         Point::new(cmp::max(x, 0) as usize, cmp::max(y, 0) as usize)
@@ -40,4 +41,5 @@ pub enum Direction {
     Left,
     Right,
     BeginningOfLine,
+    EndOfLine,
 }

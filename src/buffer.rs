@@ -1,5 +1,6 @@
 use std::io::{Read, Write};
 use std::fs::OpenOptions;
+use std::cmp;
 
 use point::Point;
 
@@ -14,6 +15,24 @@ impl Buffer {
             data: vec!(Vec::new()),
             filepath: None,
         }
+    }
+
+    pub fn line_at(&mut self, y: usize) -> Option<&Vec<char>> {
+        self.data.get(y)
+    }
+
+    pub fn last_non_empty_col(&mut self, location: Point) -> usize {
+        let x = self.line_at(location.y)
+            .and_then(|line| match line.get(location.x) {
+                Some(_) => Some(location.x as isize),
+                None => Some(line.len() as isize - 2),
+            }).unwrap();
+
+        cmp::max(0, x) as usize
+    }
+
+    pub fn char_at(&mut self, location: Point) -> Option<&char> {
+        self.line_at(location.y).and_then(|line| line.get(location.x))
     }
 
     pub fn insert(&mut self, location: Point, c: char) {

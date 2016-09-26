@@ -36,6 +36,7 @@ pub struct State {
     yanked: VecDeque<Vec<char>>,
     modes: HashMap<ModeType, Mode>, // available modes
     previous_action: Option<Action>,
+    last_col: usize,
 }
 
 impl State {
@@ -55,6 +56,7 @@ impl State {
             keystrokes: Vec::new(),
             yanked: VecDeque::new(),
             previous_action: None,
+            last_col: 0,
         }
     }
 
@@ -111,20 +113,7 @@ impl State {
                 if self.yanked.is_empty() {
                     self.status = Some("Nothing to paste!".to_string());
                 } else {
-                    let mut yanked = self.yanked.front().unwrap().clone();
-
-                    if yanked.iter().any(|&c| c == '\n') {
-                        self.buffer.new_line(self.cursor);
-                        self.move_cursor(Down);
-                        self.move_cursor(BeginningOfLine);
-                        // Remove the \n
-                        let last = yanked.len() - 1;
-                        yanked.remove(last);
-                    } else {
-                        self.move_cursor(Right);
-                    }
-
-                    self.buffer.insert_text(self.cursor, yanked);
+                    self.paste();
                 }
             }
             Action::MoveCursor(direction) => {
@@ -148,10 +137,29 @@ impl State {
     }
 
     pub fn move_cursor(&mut self, direction: Direction) {
-        let p = self.cursor.with_direction(direction);
+        let mut cur = self.cursor.with_direction(direction);
+        cur.x = self.buffer.last_non_empty_col(cur);
 
-        if p.x < self.width {
-            self.cursor = p;
+        if cur.x < self.width {
+            self.cursor = cur;
+            self.last_col = cur.y;
         }
+    }
+
+    fn paste(&mut self) {
+        let mut yanked = self.yanked.front().unwrap().clone();
+
+        if yanked.iter().any(|&c| c == '\n') {
+            self.buffer.new_line(self.cursor);
+            self.move_cursor(Down);
+            self.move_cursor(BeginningOfLine);
+            // Remove the \n
+            let last = yanked.len() - 1;
+            yanked.remove(last);
+        } else {
+            self.move_cursor(Right);
+        }
+
+        self.buffer.insert_text(self.cursor, yanked);
     }
 }

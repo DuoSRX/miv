@@ -5,7 +5,7 @@ use rustbox::Key;
 use keys::{KeyMap,KeyMatch};
 use state::Action;
 use state::Action::*;
-use point::Direction::{Up,Down,Left,Right};
+use point::Direction::*;
 
 #[derive(Eq,PartialEq,Debug,Copy,Clone,Hash)]
 pub enum ModeType {
@@ -57,6 +57,10 @@ impl Mode {
         fn f(_key: Key) -> Option<Action> { None };
 
         let mut km = KeyMap::new();
+        km.bind(&[Key::Up], MoveCursor(Up));
+        km.bind(&[Key::Down], MoveCursor(Down));
+        km.bind(&[Key::Left], MoveCursor(Left));
+        km.bind(&[Key::Right], MoveCursor(Right));
         km.bind(&[Key::Char('k')], MoveCursor(Up));
         km.bind(&[Key::Char('j')], MoveCursor(Down));
         km.bind(&[Key::Char('h')], MoveCursor(Left));
@@ -66,6 +70,8 @@ impl Mode {
         km.bind(&[Key::Char('x')], Delete);
         km.bind(&[Key::Char('p')], Paste);
         km.bind(&[Key::Char('.')], Repeat);
+        km.bind(&[Key::Char('0')], MoveCursor(BeginningOfLine));
+        km.bind(&[Key::Char('$')], MoveCursor(EndOfLine));
         km.bind(&[Key::Char('q')], Quit);
         km.bind(&[Key::Ctrl('c')], Quit);
         km.bind(&[Key::Ctrl('s')], Save);
