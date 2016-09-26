@@ -74,6 +74,7 @@ impl Mode {
         km.bind(&[Key::Char('$')], MoveCursor(EndOfLine));
         km.bind(&[Key::Char('G')], MoveCursor(EndOfFile));
         km.bind(&[Key::Char('g'), Key::Char('g')], MoveCursor(BeginningOfFile));
+        km.bind(&[Key::Char('y'), Key::Char('y')], YankLine);
         km.bind(&[Key::Char('q')], Quit);
         km.bind(&[Key::Ctrl('c')], Quit);
         km.bind(&[Key::Ctrl('s')], Save);

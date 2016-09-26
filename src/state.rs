@@ -23,6 +23,7 @@ pub enum Action {
     Repeat,
     Save,
     Quit,
+    YankLine,
 }
 
 pub struct State {
@@ -127,6 +128,11 @@ impl State {
                     let path = self.buffer.filepath.clone().unwrap(); // We know the filepath is set
                     let status = format!("Saved \"{}\" ({} bytes)", path, bytes);
                     self.status = Some(status);
+                }
+            }
+            Action::YankLine => {
+                if let Some(line) = self.buffer.line_at(self.cursor.y) {
+                    self.yanked.push_front(line.clone());
                 }
             }
             Action::Quit => { return true },
