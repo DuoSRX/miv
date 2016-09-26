@@ -128,10 +128,15 @@ impl State {
             Action::MoveCursor(direction) => {
                 self.move_cursor(direction);
             }
-            Action::ChangeMode(mode) => self.mode = mode,
+            Action::ChangeMode(mode) => {
+                if let Some(action) = self.mode().on_exit() {
+                    self.execute_action(action);
+                }
+                self.mode = mode;
+            }
             Action::Cancel => {
-                self.mode = ModeType::Normal;
                 self.keystrokes = Vec::new();
+                self.execute_action(Action::ChangeMode(ModeType::Normal));
             }
             Action::Save => {
                 let bytes = self.buffer.save_file();

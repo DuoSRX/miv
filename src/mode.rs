@@ -17,6 +17,7 @@ pub enum ModeType {
 pub struct Mode {
     keymap: KeyMap,
     default_action: fn(Key) -> Option<Action>,
+    pub on_exit: fn() -> Option<Action>,
     pub color: u16,
     pub display: String,
 }
@@ -30,8 +31,13 @@ impl Mode {
         }
     }
 
+    pub fn on_exit(&self) -> Option<Action> {
+        (self.on_exit)()
+    }
+
     pub fn normal_mode() -> Mode {
-        fn f(_key: Key) -> Option<Action> { None };
+        fn default_f(_key: Key) -> Option<Action> { None };
+        fn on_exit() -> Option<Action> { None };
 
         let mut km = KeyMap::new();
         km.bind_defaults();
@@ -57,20 +63,22 @@ impl Mode {
 
         Mode {
             keymap: km,
-            default_action: f,
+            default_action: default_f,
+            on_exit: on_exit,
             display: String::from("NORMAL"),
             color: 220,
         }
     }
 
     pub fn insert_mode() -> Mode {
-        fn f(key: Key) -> Option<Action> {
+        fn default_f(key: Key) -> Option<Action> {
             if let Key::Char(c) = key {
                 Some(Action::Insert(c))
             } else {
                 None
             }
         }
+        fn on_exit() -> Option<Action> { Some(MoveCursor(Left)) };
 
         let mut km = KeyMap::new();
         km.bind_defaults();
@@ -79,20 +87,22 @@ impl Mode {
 
         Mode {
             keymap: km,
-            default_action: f,
+            default_action: default_f,
+            on_exit: on_exit,
             display: String::from("INSERT"),
             color: 2,
         }
     }
 
     pub fn replace_mode() -> Mode {
-        fn f(key: Key) -> Option<Action> {
+        fn default_f(key: Key) -> Option<Action> {
             if let Key::Char(c) = key {
                 Some(Action::Replace(c))
             } else {
                 None
             }
         }
+        fn on_exit() -> Option<Action> { None };
 
         let mut km = KeyMap::new();
         km.bind_defaults();
@@ -101,7 +111,8 @@ impl Mode {
 
         Mode {
             keymap: km,
-            default_action: f,
+            default_action: default_f,
+            on_exit: on_exit,
             display: String::from("REPLACE"),
             color: 160,
         }
