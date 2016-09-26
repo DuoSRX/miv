@@ -8,9 +8,11 @@ use miv::state::State;
 use miv::view::View;
 
 fn main() {
-    let rustbox = RustBox::init(Default::default()).unwrap();
-    let mut view = View::new(&rustbox);
+    let mut options = rustbox::InitOptions::default();
+    options.output_mode = rustbox::OutputMode::EightBit;
+    let rustbox = RustBox::init(options).unwrap();
 
+    let mut view = View::new(&rustbox);
     let mut state = State::new(rustbox.width(), rustbox.height());
 
     let args: Vec<String> = env::args().collect();
@@ -23,13 +25,12 @@ fn main() {
     rustbox.set_cursor(0, 0);
     view.render(&state);
 
-    loop {
+    'running: loop {
         match rustbox.poll_event(false) {
             Ok(rustbox::Event::KeyEvent(key)) => {
-                if state.handle_key(key) {
-                    break;
-                }
-            },
+                let exit = state.handle_key(key);
+                if exit { break 'running }
+            }
             Ok(rustbox::Event::ResizeEvent(w, h)) => {
                 state.width = w as usize;
                 state.height = h as usize;
@@ -42,4 +43,3 @@ fn main() {
         state.status = None;
     }
 }
-

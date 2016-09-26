@@ -6,12 +6,16 @@ use keys::key_to_string;
 use point::Point;
 use state::State;
 
+const BG_COLOR: Color = Color::Byte(234);
+const FG_COLOR: Color = Color::Byte(0);
+
 pub struct View<'a> {
     rustbox: &'a RustBox,
     top_line: usize,
 }
 
 impl<'a> View<'a> {
+
     pub fn new(rustbox: &'a RustBox) -> View {
         View {
             rustbox: rustbox,
@@ -35,6 +39,7 @@ impl<'a> View<'a> {
         }
 
         self.rustbox.clear();
+        self.fill();
 
         for line in state.buffer.data.iter().skip(self.top_line) {
             for &c in line.iter() {
@@ -53,11 +58,11 @@ impl<'a> View<'a> {
         self.rustbox.present();
     }
 
-    pub fn print_at(&self, point: Point, character: char) {
-        self.rustbox.print_char(point.x, point.y, rustbox::RB_NORMAL, Color::White, Color::Black, character);
+    fn print_at(&self, point: Point, character: char) {
+        self.rustbox.print_char(point.x, point.y, rustbox::RB_NORMAL, FG_COLOR, BG_COLOR, character);
     }
 
-    pub fn print_mode(&self, state: &State) {
+    fn print_mode(&self, state: &State) {
         let mode = format!("-- {} --", state.mode().display);
         let coords = format!("{}:{}", state.cursor.y + 1, state.cursor.x);
 
@@ -72,9 +77,17 @@ impl<'a> View<'a> {
         self.rustbox.print(self.rustbox.width() - 2 - coords.len(), self.rustbox.height() - 1, rustbox::RB_BOLD, Color::White, Color::Black, coords.as_ref());
     }
 
-    pub fn print_status(&self, state: &State) {
+    fn print_status(&self, state: &State) {
         if let Some(status) = state.status.clone() {
             self.rustbox.print(20, self.rustbox.height() - 1, rustbox::RB_BOLD, Color::White, Color::Black, status.as_ref());
+        }
+    }
+
+    fn fill(&self) {
+        for y in 0..self.rustbox.height() - 1 {
+            for x in 0..self.rustbox.width() {
+                self.rustbox.print(x, y, rustbox::RB_NORMAL, Color::White, BG_COLOR, " ");
+            }
         }
     }
 }
