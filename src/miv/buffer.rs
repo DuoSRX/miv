@@ -4,6 +4,8 @@ use std::cmp;
 
 use point::Point;
 
+/// # BUFFER STUFF
+/// Heya
 pub struct Buffer {
     pub data: Vec<Vec<char>>,
     pub filepath: Option<String>,

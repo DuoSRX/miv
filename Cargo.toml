@@ -3,8 +3,13 @@ name = "miv"
 version = "0.1.0"
 authors = ["Xavier Perez <duosrx@gmail.com>"]
 
-[lib]
-name = "miv"
-
 [dependencies]
 rustbox = "*"
+
+[lib]
+name = "miv"
+path = "src/miv/lib.rs"
+
+[[bin]]
+name = "miv"
+doc = false

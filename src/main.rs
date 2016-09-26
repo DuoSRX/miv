@@ -3,7 +3,6 @@ extern crate miv;
 
 use std::env;
 use rustbox::RustBox;
-
 use miv::state::State;
 use miv::view::View;
 

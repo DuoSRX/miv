@@ -13,57 +13,64 @@ const BAR_BG_COLOR: Color = Color::Byte(237);
 const BAR_FG_COLOR: Color = Color::Byte(233);
 const BAR_BG_MODE_COLOR: Color = Color::Byte(26);
 
+const BAR_HEIGHT: usize = 2;
+
 pub struct View<'a> {
     rustbox: &'a RustBox,
-    top_line: usize,
+
+    top_line: usize, // highest visible buffer line
+
+    width: usize,  // entire width (including bottom bar)
+    height: usize, // entire height (including bottom bar)
+
+    window_height: usize, // buffer window height
+    window_width: usize,  // buffer window width
 }
 
 impl<'a> View<'a> {
-
     pub fn new(rustbox: &'a RustBox) -> View {
         View {
             rustbox: rustbox,
             top_line: 0,
+            width: 0,
+            height: 0,
+            window_height: 0,
+            window_width: 0,
         }
-    }
-
-    pub fn relative_cursor(&self, cursor: Point) -> Point {
-        Point { x: cursor.x, y: cursor.y - self.top_line }
     }
 
     pub fn render(&mut self, state: &State) {
-        let mut x = 0;
-        let mut y = 0;
-        let height = state.height - 3; // Room for the status line
+        self.height = state.height - BAR_HEIGHT - 1; // Room for the status line
+        self.width = state.width - 1;
 
+        // Adjust `top_line` for scrolling vertically.
         if state.cursor.y < self.top_line {
             self.top_line = state.cursor.y;
-        } else if state.cursor.y > height + self.top_line {
-            self.top_line = state.cursor.y - height;
+        } else if state.cursor.y > self.height + self.top_line {
+            self.top_line = state.cursor.y - self.height;
         }
 
         self.rustbox.clear();
-        self.fill(state);
+        self.fill_background(state);
 
-        for line in state.buffer.data.iter().skip(self.top_line).take(height + 1) {
-            for &c in line.iter() {
-                if c == '\n' { continue };
-                self.print_at(Point::new(x, y), c);
-                x += 1;
+        for (y, line) in state.buffer.data.iter().skip(self.top_line).take(self.height + 1).enumerate() {
+            for (x, &character) in line.iter().enumerate() {
+                if character == '\n' { continue };
+                self.rustbox.print_char(x, y, rustbox::RB_NORMAL, FG_COLOR, BG_COLOR, character);
             }
-            y += 1;
-            x = 0;
         }
 
-        let cursor = self.relative_cursor(state.cursor);
+        let cursor = self.adjusted_cursor(state.cursor);
         self.rustbox.set_cursor(cursor.x as isize, cursor.y as isize);
         self.print_bar(state);
 
         self.rustbox.present();
     }
 
-    fn print_at(&self, point: Point, character: char) {
-        self.rustbox.print_char(point.x, point.y, rustbox::RB_NORMAL, FG_COLOR, BG_COLOR, character);
+    // The cursor passed by State is the absolute position in the text buffer.
+    // This adjusts the position by `top_line`. Used for vertical scrolling.
+    fn adjusted_cursor(&self, cursor: Point) -> Point {
+        Point { x: cursor.x, y: cursor.y - self.top_line }
     }
 
     fn print_bar(&self, state: &State) {
@@ -96,7 +103,7 @@ impl<'a> View<'a> {
         }
     }
 
-    fn fill(&self, state: &State) {
+    fn fill_background(&self, state: &State) {
         // Background
         for y in 0..self.rustbox.height() {
             for x in 0..self.rustbox.width() {
