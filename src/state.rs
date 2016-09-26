@@ -40,7 +40,6 @@ pub struct State {
     yanked: VecDeque<Vec<char>>,
     modes: HashMap<ModeType, Mode>, // available modes
     previous_action: Option<Action>,
-    last_col: usize,
 }
 
 impl State {
@@ -61,7 +60,6 @@ impl State {
             keystrokes: Vec::new(),
             yanked: VecDeque::new(),
             previous_action: None,
-            last_col: 0,
         }
     }
 
@@ -175,7 +173,6 @@ impl State {
         cur.x = self.buffer.last_non_empty_col(cur);
 
         self.cursor = cur;
-        self.last_col = cur.y;
     }
 
     fn paste(&mut self) {
