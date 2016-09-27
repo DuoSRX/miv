@@ -19,7 +19,7 @@ pub struct Mode {
     default_action: fn(Key) -> Option<Action>,
     pub on_exit: fn() -> Option<Action>,
     pub color: u16,
-    pub display: String,
+    pub display: &'static str,
 }
 
 impl Mode {
@@ -65,7 +65,7 @@ impl Mode {
             keymap: km,
             default_action: default_f,
             on_exit: on_exit,
-            display: String::from("NORMAL"),
+            display: "NORMAL",
             color: 220,
         }
     }
@@ -89,7 +89,7 @@ impl Mode {
             keymap: km,
             default_action: default_f,
             on_exit: on_exit,
-            display: String::from("INSERT"),
+            display: "INSERT",
             color: 2,
         }
     }
@@ -113,7 +113,7 @@ impl Mode {
             keymap: km,
             default_action: default_f,
             on_exit: on_exit,
-            display: String::from("REPLACE"),
+            display: "REPLACE",
             color: 160,
         }
     }

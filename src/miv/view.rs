@@ -19,6 +19,8 @@ pub struct View<'a> {
     rustbox: &'a RustBox,
     /// Highest visible buffer line
     topline: usize,
+    /// Leftmost visible buffer column
+    leftcol: usize,
     /// Entire width (including bottom bar)
     width: usize,
     /// Entire height (including bottom bar)
@@ -41,6 +43,7 @@ impl<'a> View<'a> {
         View {
             rustbox: rustbox,
             topline: 0,
+            leftcol: 0,
             width: 0,
             height: 0,
             window_height: 0,
@@ -64,13 +67,19 @@ impl<'a> View<'a> {
             self.topline = state.cursor.y - self.last_row;
         }
 
+        if state.cursor.x < self.leftcol {
+            self.leftcol = state.cursor.x;
+        } else if state.cursor.x > self.window_width + self.leftcol {
+            self.leftcol = state.cursor.x - self.window_width
+        }
+
         self.cursor = self.adjusted_cursor(state.cursor);
 
         self.rustbox.clear();
         self.fill_background(state);
 
         for (y, line) in state.buffer.data.iter().skip(self.topline).take(self.window_height).enumerate() {
-            for (x, &character) in line.iter().enumerate() {
+            for (x, &character) in line.iter().skip(self.leftcol).take(self.window_width + 1).enumerate() {
                 if character == '\n' { continue };
                 self.rustbox.print_char(x, y, rustbox::RB_NORMAL, FG_COLOR, BG_COLOR, character);
             }
@@ -84,9 +93,9 @@ impl<'a> View<'a> {
     }
 
     /// The cursor passed by State is the absolute position in the text buffer.
-    /// This adjusts the position by `top_line`. Used for vertical scrolling.
+    /// This adjusts the position by `topline` and `leftcol`. Used for scrolling.
     fn adjusted_cursor(&self, cursor: Point) -> Point {
-        Point { x: cursor.x, y: cursor.y - self.topline }
+        Point { x: cursor.x - self.leftcol, y: cursor.y - self.topline }
     }
 
     fn print_bar(&self, state: &State) {
