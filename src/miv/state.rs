@@ -170,7 +170,9 @@ impl State {
             _ => {}
         }
 
-        cur.x = self.buffer.last_non_empty_col(cur);
+        let max_x = self.buffer.last_non_empty_col(cur);
+        let max_y = self.buffer.line_len() - 1;
+        cur.clamp_by(max_x, max_y);
 
         self.cursor = cur;
     }

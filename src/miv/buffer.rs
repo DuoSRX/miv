@@ -35,18 +35,6 @@ impl Buffer {
         self.data.get(y)
     }
 
-    /// Find the last column that is non empty.
-    /// Returns 0 if the whole line is empty.
-    pub fn last_non_empty_col(&mut self, location: Point) -> usize {
-        let x = self.line_at(location.y)
-            .and_then(|line| match line.chars().nth(location.x) {
-                Some(_) => Some(location.x as isize),
-                None => Some(line.len() as isize - 2),
-            }).unwrap();
-
-        cmp::max(0, x) as usize
-    }
-
     /// Find a char at a specific column/row.
     pub fn char_at(&mut self, location: Point) -> Option<char> {
         self.line_at(location.y).and_then(|line| line.chars().nth(location.x))
@@ -101,6 +89,12 @@ impl Buffer {
         self.data[location.y] = String::from(left);
         self.data[location.y].push('\n');
         self.data.insert(location.y + 1, right.into());
+    }
+
+    /// Find the last column that is non empty.
+    /// Returns 0 if the whole line is empty.
+    pub fn last_non_empty_col(&mut self, location: Point) -> usize {
+        self.line_at(location.y).map_or(0, |s| s.len() - 1)
     }
 
     /// Load a file from a path and populate the internal data buffer.

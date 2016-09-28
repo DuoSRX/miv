@@ -33,6 +33,11 @@ impl Point {
         let y = self.y as isize + dy;
         Point::new(cmp::max(x, 0) as usize, cmp::max(y, 0) as usize)
     }
+
+    pub fn clamp_by(&mut self, max_x: usize, max_y: usize) {
+        self.x = cmp::min(self.x, max_x);
+        self.y = cmp::min(self.y, max_y);
+    }
 }
 
 #[derive(PartialEq,Eq,Copy,Clone,Debug)]
