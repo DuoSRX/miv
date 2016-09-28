@@ -20,7 +20,7 @@ impl Buffer {
     /// Make a new empty `Buffer`.
     pub fn new() -> Buffer {
         Buffer {
-            data: vec!("".into()),
+            data: vec!("\n".into()),
             filepath: None,
         }
     }
@@ -99,6 +99,7 @@ impl Buffer {
         let line = self.data[location.y].clone();
         let (left, right) = line.split_at(location.x);
         self.data[location.y] = String::from(left);
+        self.data[location.y].push('\n');
         self.data.insert(location.y + 1, right.into());
     }
 
@@ -119,7 +120,7 @@ impl Buffer {
         }
 
         if buf.is_empty() {
-            buf.push("".into());
+            buf.push("\n".into());
         }
 
         self.data = buf;
