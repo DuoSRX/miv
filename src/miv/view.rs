@@ -79,7 +79,7 @@ impl<'a> View<'a> {
         self.fill_background(state);
 
         for (y, line) in state.buffer.data.iter().skip(self.topline).take(self.window_height).enumerate() {
-            for (x, &character) in line.iter().skip(self.leftcol).take(self.window_width + 1).enumerate() {
+            for (x, character) in line.chars().skip(self.leftcol).take(self.window_width + 1).enumerate() {
                 if character == '\n' { continue };
                 self.rustbox.print_char(x, y, rustbox::RB_NORMAL, FG_COLOR, BG_COLOR, character);
             }
@@ -124,7 +124,7 @@ impl<'a> View<'a> {
 
     fn print_status(&self, state: &State) {
         if let Some(status) = state.status.clone() {
-            self.rustbox.print(0, self.window_height, rustbox::RB_BOLD, Color::White, BG_COLOR, status.as_ref());
+            self.rustbox.print(0, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, status.as_ref());
         }
     }
 

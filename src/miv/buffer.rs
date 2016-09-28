@@ -10,7 +10,7 @@ pub struct Buffer {
     /// Holds the actual data.
     /// This is a *very* inefficient data structure and will eventually be replace by a GapBuffer or Rope.
     /// This will also end up private so don't really too much on it.
-    pub data: Vec<Vec<char>>,
+    pub data: Vec<String>,
 
     /// The file path associated with that buffer.
     pub filepath: Option<String>,
@@ -20,7 +20,7 @@ impl Buffer {
     /// Make a new empty `Buffer`.
     pub fn new() -> Buffer {
         Buffer {
-            data: vec!(Vec::new()),
+            data: vec!("".into()),
             filepath: None,
         }
     }
@@ -31,7 +31,7 @@ impl Buffer {
     }
 
     /// Find the line at the given row.
-    pub fn line_at(&mut self, y: usize) -> Option<&Vec<char>> {
+    pub fn line_at(&mut self, y: usize) -> Option<&String> {
         self.data.get(y)
     }
 
@@ -39,7 +39,7 @@ impl Buffer {
     /// Returns 0 if the whole line is empty.
     pub fn last_non_empty_col(&mut self, location: Point) -> usize {
         let x = self.line_at(location.y)
-            .and_then(|line| match line.get(location.x) {
+            .and_then(|line| match line.chars().nth(location.x) {
                 Some(_) => Some(location.x as isize),
                 None => Some(line.len() as isize - 2),
             }).unwrap();
@@ -48,8 +48,8 @@ impl Buffer {
     }
 
     /// Find a char at a specific column/row.
-    pub fn char_at(&mut self, location: Point) -> Option<&char> {
-        self.line_at(location.y).and_then(|line| line.get(location.x))
+    pub fn char_at(&mut self, location: Point) -> Option<char> {
+        self.line_at(location.y).and_then(|line| line.chars().nth(location.x))
     }
 
     /// Insert a row at the specified point, pushing the other characters to the right.
@@ -59,17 +59,16 @@ impl Buffer {
 
     /// Replace a specific character.
     pub fn replace(&mut self, location: Point, c: char) {
-        self.data[location.y][location.x] = c;
+        self.insert(location, c);
+        self.delete(location.offset(1, 0));
     }
 
     /// Replace a character at the given location or insert it.
     pub fn upsert(&mut self, location: Point, c: char) {
-        let existing = self.data[location.y][location.x];
-
-        if existing == '\n' {
-            self.insert(location, c)
+        if let Some('\n') = self.char_at(location) {
+            self.insert(location, c);
         } else {
-            self.data[location.y][location.x] = c;
+            self.replace(location, c);
         }
     }
 
@@ -79,29 +78,32 @@ impl Buffer {
     }
 
     /// Insert several characters at the given location. See `insert`.
-    pub fn insert_text(&mut self, location: Point, chars: Vec<char>) {
-        for (x, &c) in chars.iter().enumerate() {
-            self.data[location.y].insert(x + location.x, c);
+    pub fn insert_text(&mut self, location: Point, string: String) {
+        for (x, c) in string.chars().enumerate() {
+            self.data[location.y].insert(location.x + x, c);
         }
     }
 
     /// Insert an empty line at the given location, shifting the subsequent lines down if any.
     pub fn new_line(&mut self, location: Point) {
-        self.data.insert(location.y + 1, vec!('\n'));
+        self.data.insert(location.y + 1, "\n".into());
     }
 
     /// Delete a line at the given location, shifting the subsequent lines up if any.
-    pub fn delete_line(&mut self, location: Point) -> Vec<char> {
+    pub fn delete_line(&mut self, location: Point) -> String {
         self.data.remove(location.y)
     }
 
     /// Split a line in half, inserting the second half as a new line below the first half.
     pub fn split_line(&mut self, location: Point) {
-        let newline = self.data[location.y].split_off(location.x);
-        self.data.insert(location.y + 1, newline);
+        let line = self.data[location.y].clone();
+        let (left, right) = line.split_at(location.x);
+        self.data[location.y] = String::from(left);
+        self.data.insert(location.y + 1, right.into());
     }
 
     /// Load a file from a path and populate the internal data buffer.
+    /// Unfortunately replaces the original line endings with CRs for now.
     /// # Panics
     /// When the file can't be loaded, e.g. if it doesn't exist.
     pub fn load_file(&mut self, path: String) {
@@ -111,24 +113,19 @@ impl Buffer {
         let mut buf = Vec::new();
 
         for line in s.lines() {
-            let mut l = Vec::with_capacity(line.len());
-            for c in line.chars() {
-                l.push(c);
-            }
+            let mut l = String::from(line);
             l.push('\n');
-            buf.push(l)
+            buf.push(l);
         }
 
         if buf.is_empty() {
-            buf.push(Vec::new());
+            buf.push("".into());
         }
 
         self.data = buf;
     }
 
     /// Save the buffer at the internal filepath, returning the number of bytes written.
-    ///
-    /// Changes the line ending to CR, disregarding what they were originally.
     ///
     /// Probably doesn't handle UTF-8 very well du to the `char` to `u8` conversion happening.
     /// # Panics
@@ -139,12 +136,9 @@ impl Buffer {
         let path = self.filepath.clone().unwrap();
         let mut file = OpenOptions::new().read(true).write(true).create(true).open(path).unwrap();
         for line in &self.data {
-            for &c in line.iter() {
-                let _ = file.write_all(&[c as u8]);
-            }
+            let _ = file.write_all(line.as_bytes());
         }
 
         file.metadata().unwrap().len()
     }
 }
-

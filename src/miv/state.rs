@@ -37,7 +37,7 @@ pub struct State {
     pub keystrokes: Vec<Key>,
     pub mode: ModeType, // current mode
 
-    yanked: VecDeque<Vec<char>>,
+    yanked: VecDeque<String>,
     modes: HashMap<ModeType, Mode>, // available modes
     previous_action: Option<Action>,
 }
@@ -105,7 +105,7 @@ impl State {
             }
             Action::Delete => {
                 let character = self.buffer.delete(self.cursor);
-                self.yanked.push_front(vec!(character));
+                self.yanked.push_front(character.to_string());
             }
             Action::DeleteLine => {
                 let line = self.buffer.delete_line(self.cursor);
@@ -178,13 +178,12 @@ impl State {
     fn paste(&mut self) {
         let mut yanked = self.yanked.front().unwrap().clone();
 
-        if yanked.iter().any(|&c| c == '\n') {
+        // Pasting a new line
+        if let Some(_) = yanked.rfind('\n') {
             self.buffer.new_line(self.cursor);
             self.move_cursor(Down);
             self.move_cursor(BeginningOfLine);
-            // Remove the \n
-            let last = yanked.len() - 1;
-            yanked.remove(last);
+            yanked.pop(); // remove the last \n
         } else {
             self.move_cursor(Right);
         }
