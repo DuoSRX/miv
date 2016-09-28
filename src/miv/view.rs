@@ -81,6 +81,10 @@ impl<'a> View<'a> {
         for (y, line) in state.buffer.data.iter().skip(self.topline).take(self.window_height).enumerate() {
             for (x, character) in line.chars().skip(self.leftcol).take(self.window_width + 1).enumerate() {
                 if character == '\n' { continue };
+                // if character == '\n' {
+                //     self.rustbox.print_char(x, y, rustbox::RB_NORMAL, FG_COLOR, BG_COLOR, 0xB6 as char);
+                //     continue;
+                // }
                 self.rustbox.print_char(x, y, rustbox::RB_NORMAL, FG_COLOR, BG_COLOR, character);
             }
         }
@@ -112,14 +116,14 @@ impl<'a> View<'a> {
     }
 
     fn print_mode(&self, state: &State) {
-        let mode = format!(" {}  ", state.mode().display);
-        self.rustbox.print(0, self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, Color::Byte(state.mode().color), mode.as_ref());
+        // let mode = format!(" {}  ", state.mode().display);
+        // self.rustbox.print(0, self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, Color::Byte(state.mode().color), mode.as_ref());
     }
 
     fn print_coords(&self, state: &State) {
-        let coords = format!("  {}:{}  ", state.cursor.y + 1, state.cursor.x);
-        let color = Color::Byte(state.mode().color);
-        self.rustbox.print(self.window_width - coords.len(), self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, color, coords.as_ref());
+        // let coords = format!("  {}:{}  ", state.cursor.y + 1, state.cursor.x);
+        // let color = Color::Byte(state.mode().color);
+        // self.rustbox.print(self.window_width - coords.len(), self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, color, coords.as_ref());
     }
 
     fn print_status(&self, state: &State) {

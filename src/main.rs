@@ -3,6 +3,7 @@ extern crate miv;
 
 use std::env;
 use rustbox::RustBox;
+use rustbox::Key;
 use miv::state::State;
 use miv::view::View;
 
@@ -26,6 +27,9 @@ fn main() {
 
     'running: loop {
         match rustbox.poll_event(false) {
+            Ok(rustbox::Event::KeyEvent(Key::Char('q'))) => {
+                break 'running;
+            }
             Ok(rustbox::Event::KeyEvent(key)) => {
                 let exit = state.handle_key(key);
                 if exit { break 'running }

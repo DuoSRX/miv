@@ -4,7 +4,7 @@ use std::collections::{HashMap,VecDeque};
 use std::usize;
 use rustbox::Key;
 use buffer::Buffer;
-use mode::{Mode,ModeType};
+use mode::{Mode,ModeType,NormalMode,InsertMode,ReplaceMode};
 use point::{Direction,Point};
 use point::Direction::*;
 
@@ -19,9 +19,10 @@ pub enum Action {
     NewLine,
     NewLineAtPoint,
     MoveCursor(Direction),
+    OperatorPending(usize),
     PartialKey,
     Paste,
-    Repeat,
+    RepeatPrevious,
     Replace(char),
     Save,
     Quit,
@@ -29,7 +30,7 @@ pub enum Action {
     Multi(Vec<Action>),
 }
 
-pub struct State {
+pub struct State<'a> {
     pub cursor: Point,
     pub buffer: Buffer,
     pub width: usize,
@@ -39,16 +40,17 @@ pub struct State {
     pub mode: ModeType, // current mode
 
     yanked: VecDeque<String>,
-    modes: HashMap<ModeType, Mode>, // available modes
+    modes: HashMap<ModeType, Box<Mode + 'a>>, // available modes
     previous_action: Option<Action>,
+    operator_pending: Option<usize>,
 }
 
-impl State {
-    pub fn new(width: usize, height: usize) -> State {
-        let mut modes = HashMap::new();
-        modes.insert(ModeType::Insert, Mode::insert_mode());
-        modes.insert(ModeType::Normal, Mode::normal_mode());
-        modes.insert(ModeType::Replace, Mode::replace_mode());
+impl<'a> State<'a> {
+    pub fn new(width: usize, height: usize) -> State<'a> {
+        let mut modes: HashMap<ModeType, Box<Mode + 'a>> = HashMap::new();
+        modes.insert(ModeType::Insert, Box::new(InsertMode::new()));
+        modes.insert(ModeType::Normal, Box::new(NormalMode::new()));
+        modes.insert(ModeType::Replace, Box::new(ReplaceMode::new()));
 
         State {
             cursor: Point::new(0, 0),
@@ -61,11 +63,12 @@ impl State {
             keystrokes: Vec::new(),
             yanked: VecDeque::new(),
             previous_action: None,
+            operator_pending: None,
         }
     }
 
     pub fn mode(&self) -> &Mode {
-        self.modes.get(&self.mode).expect(format!("Unknown mode {:?}", self.mode).as_ref())
+        self.modes.get(&self.mode).unwrap().as_ref()
     }
 
     pub fn handle_key(&mut self, key: rustbox::Key) -> bool {
@@ -73,14 +76,27 @@ impl State {
 
         match self.mode().keys_pressed(self.keystrokes.as_slice()) {
             Some(Action::PartialKey) => false,
-            Some(action) => self.execute_action(action),
+            Some(action) => {
+                // Dear god that is ugly logic. Mode that into the mode maybe?
+                match action {
+                    Action::OperatorPending(_) => self.execute_action(action),
+                    _ => {
+                        let mut result = false;
+                        for _ in 0..(self.operator_pending.unwrap_or(1)) {
+                            result = self.execute_action(action.clone());
+                        }
+                        self.operator_pending = None;
+                        result
+                    }
+                }
+            }
             None => { self.keystrokes = Vec::new(); false }
         }
     }
 
     fn execute_action(&mut self, action: Action) -> bool {
         match action {
-            Action::Repeat => {
+            Action::RepeatPrevious => {
                 if let Some(action) = self.previous_action.clone() {
                     self.execute_action(action);
                 }
@@ -153,11 +169,23 @@ impl State {
             Action::Multi(ref actions) => {
                 for action in actions { self.execute_action(action.clone()); }
             }
+            Action::OperatorPending(n) => {
+                // if self.operator_pending.is_none() {
+                //     self.operator_pending = 1;
+                // }
+                //self.operator_pending = self.operator_pending.or(Some(0)).map(|o| o * 10 + n);
+                self.operator_pending = match self.operator_pending {
+                    None => Some(0),
+                    Some(op) => Some(op * 10 + n),
+                };
+
+                self.status = Some(format!("{}", self.operator_pending.unwrap()));
+            }
             Action::Quit => { return true },
             _ => {},
         }
 
-        if action != Action::Repeat && action != Action::Cancel {
+        if action != Action::RepeatPrevious && action != Action::Cancel {
             self.previous_action = Some(action);
         }
 
