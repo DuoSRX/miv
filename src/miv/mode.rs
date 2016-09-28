@@ -46,6 +46,7 @@ impl Mode {
         km.bind(&[Key::Char('h')], MoveCursor(Left));
         km.bind(&[Key::Char('l')], MoveCursor(Right));
         km.bind(&[Key::Char('o')], NewLine);
+        km.bind(&[Key::Char('O')], Multi(vec!(MoveCursor(Up), NewLine)));
         km.bind(&[Key::Char('i')], ChangeMode(ModeType::Insert));
         km.bind(&[Key::Char('R')], ChangeMode(ModeType::Replace));
         km.bind(&[Key::Char('x')], Delete);
@@ -60,6 +61,22 @@ impl Mode {
         km.bind(&[Key::Ctrl('c')], Quit);
         km.bind(&[Key::Ctrl('s')], Save);
         km.bind(&[Key::Char('d'), Key::Char('d')], DeleteLine);
+
+        km.bind(&[Key::Char('A')], Multi(vec!(
+            MoveCursor(EndOfLine),
+            ChangeMode(ModeType::Insert),
+            MoveCursor(Right),
+        )));
+
+        km.bind(&[Key::Char('I')], Multi(vec!(
+            MoveCursor(BeginningOfLine),
+            ChangeMode(ModeType::Insert),
+        )));
+
+        km.bind(&[Key::Char('a')], Multi(vec!(
+            MoveCursor(Right),
+            ChangeMode(ModeType::Insert),
+        )));
 
         Mode {
             keymap: km,

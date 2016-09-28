@@ -26,6 +26,7 @@ pub enum Action {
     Save,
     Quit,
     YankLine,
+    Multi(Vec<Action>),
 }
 
 pub struct State {
@@ -148,6 +149,9 @@ impl State {
                 if let Some(line) = self.buffer.line_at(self.cursor.y) {
                     self.yanked.push_front(line.clone());
                 }
+            }
+            Action::Multi(ref actions) => {
+                for action in actions { self.execute_action(action.clone()); }
             }
             Action::Quit => { return true },
             _ => {},
