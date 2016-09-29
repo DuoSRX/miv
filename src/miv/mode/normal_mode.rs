@@ -63,47 +63,38 @@ impl NormalMode {
             ChangeMode(ModeType::Insert),
         )));
     }
+
+    fn maybe_repeat(&mut self, action: Action) -> Option<Action> {
+        if self.operator_pending.is_empty() {
+            Some(action)
+        } else {
+            let n = i32::from_str_radix(self.operator_pending.as_ref(), 10).ok().unwrap_or(1);
+            self.operator_pending = String::new();
+            Some(Repeat(Box::new(action), n as usize))
+        }
+    }
 }
 
 impl Mode for NormalMode {
     fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action> {
-        // match keys[0] {
-        //     Key::Char(c) if c.is_digit(10) => {
-        //         // whew lad... unsafe much?
-        //         let n = i32::from_str_radix(c.to_string().as_ref(), 10).ok().unwrap();
-        //         self.operator_pending.push(c);
-        //         return None;
-        //     }
-        //     _ => {}
-        // };
-        match self.keymap.match_keys(keys) {
-            KeyMatch::Action(action) => Some(action),
-            KeyMatch::Partial => Some(Action::PartialKey),
-            KeyMatch::None => self.default_action(keys[0]),
-        }
+        // Special case to allow zero as a binding while still having the repeat operations
+        if keys[0] == Key::Char('0') && !self.operator_pending.is_empty() {
+            self.operator_pending.push('0');
+            return None;
+        };
 
-        // {
-        //     // Dear god that is ugly logic. Mode that into the mode maybe?
-        //     match action {
-        //         Action::OperatorPending(_) => self.execute_action(action),
-        //         _ => {
-        //             let mut result = false;
-        //             for _ in 0..(self.operator_pending.unwrap_or(1)) {
-        //                 result = self.execute_action(action.clone());
-        //             }
-        //             self.operator_pending = None;
-        //             result
-        //         }
-        //     }
-        // }
+        match self.keymap.match_keys(keys) {
+            KeyMatch::Action(action) => self.maybe_repeat(action),
+            KeyMatch::Partial => Some(Action::PartialKey),
+            KeyMatch::None => {
+                match keys[0] {
+                    Key::Char(c) if c.is_digit(10) => {
+                        self.operator_pending.push(c);
+                        None
+                    }
+                    _ => self.default_action(keys[0]),
+                }
+            }
+        }
     }
 }
-
-// pub fn normal_mode() -> Mode {
-//     fn default_f(key: Key) -> Option<Action> {
-//         match key {
-//             Key::Char(c) if c.is_digit(10) => {
-//             }
-//             _ => None,
-//         }
-//     };

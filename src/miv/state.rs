@@ -1,6 +1,6 @@
 extern crate rustbox;
 
-use std::collections::{HashMap,VecDeque};
+use std::collections::VecDeque;
 use std::usize;
 use rustbox::Key;
 use buffer::Buffer;
@@ -19,7 +19,6 @@ pub enum Action {
     NewLine,
     NewLineAtPoint,
     MoveCursor(Direction),
-    OperatorPending(usize),
     PartialKey,
     Paste,
     RepeatPrevious,
@@ -27,7 +26,10 @@ pub enum Action {
     Save,
     Quit,
     YankLine,
+    /// Multiple actions in a row
     Multi(Vec<Action>),
+    /// The same action `n` times
+    Repeat(Box<Action>, usize)
 }
 
 pub struct State<'a> {
@@ -42,7 +44,6 @@ pub struct State<'a> {
     mode: Box<Mode + 'a>,
     yanked: VecDeque<String>,
     previous_action: Option<Action>,
-    operator_pending: Option<usize>,
 }
 
 impl<'a> State<'a> {
@@ -58,7 +59,6 @@ impl<'a> State<'a> {
             keystrokes: Vec::new(),
             yanked: VecDeque::new(),
             previous_action: None,
-            operator_pending: None,
         }
     }
 
@@ -145,17 +145,8 @@ impl<'a> State<'a> {
             Action::Multi(ref actions) => {
                 for action in actions { self.execute_action(action.clone()); }
             }
-            Action::OperatorPending(n) => {
-                // if self.operator_pending.is_none() {
-                //     self.operator_pending = 1;
-                // }
-                //self.operator_pending = self.operator_pending.or(Some(0)).map(|o| o * 10 + n);
-                self.operator_pending = match self.operator_pending {
-                    None => Some(0),
-                    Some(op) => Some(op * 10 + n),
-                };
-
-                self.status = Some(format!("{}", self.operator_pending.unwrap()));
+            Action::Repeat(ref action, times) => {
+                for _ in 0..times { self.execute_action(*action.clone()); }
             }
             Action::Quit => { return true },
             _ => {},
