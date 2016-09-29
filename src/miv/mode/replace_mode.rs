@@ -38,7 +38,7 @@ impl ReplaceMode {
 }
 
 impl Mode for ReplaceMode {
-    fn keys_pressed(&self, keys: &[rustbox::Key]) -> Option<Action> {
+    fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action> {
         match self.keymap.match_keys(keys) {
             KeyMatch::Action(action) => Some(action),
             KeyMatch::Partial => Some(Action::PartialKey),

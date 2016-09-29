@@ -149,7 +149,7 @@ impl<'a> View<'a> {
     }
 
     fn bar_bg_color(&self, state: &State) -> Color {
-        if state.mode == ModeType::Normal {
+        if state.mode_type == ModeType::Normal {
             BAR_BG_COLOR
         } else {
             BAR_BG_MODE_COLOR

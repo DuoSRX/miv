@@ -10,6 +10,7 @@ use miv::view::View;
 fn main() {
     let mut options = rustbox::InitOptions::default();
     options.output_mode = rustbox::OutputMode::EightBit;
+    options.buffer_stderr = true;
     let rustbox = RustBox::init(options).unwrap();
 
     let mut view = View::new(&rustbox);
@@ -43,6 +44,5 @@ fn main() {
         }
 
         view.render(&state);
-        state.status = None;
     }
 }

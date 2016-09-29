@@ -19,7 +19,7 @@ pub enum ModeType {
 }
 
 pub trait Mode {
-    fn keys_pressed(&self, keys: &[rustbox::Key]) -> Option<Action>;
+    fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action>;
     fn default_action(&self, Key) -> Option<Action> { None }
     fn on_exit(&self) -> Option<Action> { None }
 }

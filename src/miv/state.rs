@@ -37,29 +37,24 @@ pub struct State<'a> {
     pub height: usize,
     pub status: Option<String>, // text to be displayed in the bottom bar
     pub keystrokes: Vec<Key>,
-    pub mode: ModeType, // current mode
+    pub mode_type: ModeType, // current mode
 
+    mode: Box<Mode + 'a>,
     yanked: VecDeque<String>,
-    modes: HashMap<ModeType, Box<Mode + 'a>>, // available modes
     previous_action: Option<Action>,
     operator_pending: Option<usize>,
 }
 
 impl<'a> State<'a> {
     pub fn new(width: usize, height: usize) -> State<'a> {
-        let mut modes: HashMap<ModeType, Box<Mode + 'a>> = HashMap::new();
-        modes.insert(ModeType::Insert, Box::new(InsertMode::new()));
-        modes.insert(ModeType::Normal, Box::new(NormalMode::new()));
-        modes.insert(ModeType::Replace, Box::new(ReplaceMode::new()));
-
         State {
             cursor: Point::new(0, 0),
             buffer: Buffer::new(),
             width: width,
             height: height,
             status: None,
-            modes: modes,
-            mode: ModeType::Normal,
+            mode_type: ModeType::Normal,
+            mode: Box::new(NormalMode::new()),
             keystrokes: Vec::new(),
             yanked: VecDeque::new(),
             previous_action: None,
@@ -67,29 +62,13 @@ impl<'a> State<'a> {
         }
     }
 
-    pub fn mode(&self) -> &Mode {
-        self.modes.get(&self.mode).unwrap().as_ref()
-    }
-
     pub fn handle_key(&mut self, key: rustbox::Key) -> bool {
+        self.status = None;
         self.keystrokes.push(key);
 
-        match self.mode().keys_pressed(self.keystrokes.as_slice()) {
+        match self.mode.keys_pressed(self.keystrokes.as_slice()) {
             Some(Action::PartialKey) => false,
-            Some(action) => {
-                // Dear god that is ugly logic. Mode that into the mode maybe?
-                match action {
-                    Action::OperatorPending(_) => self.execute_action(action),
-                    _ => {
-                        let mut result = false;
-                        for _ in 0..(self.operator_pending.unwrap_or(1)) {
-                            result = self.execute_action(action.clone());
-                        }
-                        self.operator_pending = None;
-                        result
-                    }
-                }
-            }
+            Some(action) => self.execute_action(action),
             None => { self.keystrokes = Vec::new(); false }
         }
     }
@@ -110,7 +89,7 @@ impl<'a> State<'a> {
                 self.buffer.new_line(self.cursor);
                 self.move_cursor(Down);
                 self.move_cursor(BeginningOfLine);
-                self.mode = ModeType::Insert;
+                self.switch_mode(ModeType::Insert);
             }
             Action::Insert(c) => {
                 self.buffer.insert(self.cursor, c);
@@ -143,11 +122,8 @@ impl<'a> State<'a> {
             Action::MoveCursor(direction) => {
                 self.move_cursor(direction);
             }
-            Action::ChangeMode(mode) => {
-                if let Some(action) = self.mode().on_exit() {
-                    self.execute_action(action);
-                }
-                self.mode = mode;
+            Action::ChangeMode(mode_type) => {
+                self.switch_mode(mode_type);
             }
             Action::Cancel => {
                 self.keystrokes = Vec::new();
@@ -191,6 +167,19 @@ impl<'a> State<'a> {
 
         self.keystrokes = Vec::new();
         false
+    }
+
+    fn switch_mode(&mut self, mode_type: ModeType) {
+        if let Some(action) = self.mode.on_exit() {
+            self.execute_action(action);
+        }
+
+        self.mode_type = mode_type;
+        self.mode = match mode_type {
+            ModeType::Insert =>  Box::new(InsertMode::new()) as Box<Mode>,
+            ModeType::Normal =>  Box::new(NormalMode::new()) as Box<Mode>,
+            ModeType::Replace => Box::new(ReplaceMode::new()) as Box<Mode>,
+        };
     }
 
     pub fn move_cursor(&mut self, direction: Direction) {

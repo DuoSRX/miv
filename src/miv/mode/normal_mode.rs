@@ -8,12 +8,14 @@ use state::Action::*;
 
 pub struct NormalMode {
     keymap: KeyMap,
+    operator_pending: String,
 }
 
 impl NormalMode {
     pub fn new() -> NormalMode {
         let mut mode = NormalMode {
             keymap: KeyMap::new(),
+            operator_pending: String::new(),
         };
         mode.bind_defaults();
         mode
@@ -64,12 +66,36 @@ impl NormalMode {
 }
 
 impl Mode for NormalMode {
-    fn keys_pressed(&self, keys: &[rustbox::Key]) -> Option<Action> {
+    fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action> {
+        // match keys[0] {
+        //     Key::Char(c) if c.is_digit(10) => {
+        //         // whew lad... unsafe much?
+        //         let n = i32::from_str_radix(c.to_string().as_ref(), 10).ok().unwrap();
+        //         self.operator_pending.push(c);
+        //         return None;
+        //     }
+        //     _ => {}
+        // };
         match self.keymap.match_keys(keys) {
             KeyMatch::Action(action) => Some(action),
             KeyMatch::Partial => Some(Action::PartialKey),
             KeyMatch::None => self.default_action(keys[0]),
         }
+
+        // {
+        //     // Dear god that is ugly logic. Mode that into the mode maybe?
+        //     match action {
+        //         Action::OperatorPending(_) => self.execute_action(action),
+        //         _ => {
+        //             let mut result = false;
+        //             for _ in 0..(self.operator_pending.unwrap_or(1)) {
+        //                 result = self.execute_action(action.clone());
+        //             }
+        //             self.operator_pending = None;
+        //             result
+        //         }
+        //     }
+        // }
     }
 }
 
@@ -77,9 +103,6 @@ impl Mode for NormalMode {
 //     fn default_f(key: Key) -> Option<Action> {
 //         match key {
 //             Key::Char(c) if c.is_digit(10) => {
-//                 // whew lad... unsafe much?
-//                 let n = i32::from_str_radix(c.to_string().as_ref(), 10).ok().unwrap();
-//                 Some(OperatorPending(n as usize))
 //             }
 //             _ => None,
 //         }
