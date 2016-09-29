@@ -28,7 +28,7 @@ fn main() {
 
     'running: loop {
         match rustbox.poll_event(false) {
-            Ok(rustbox::Event::KeyEvent(Key::Char('q'))) => {
+            Ok(rustbox::Event::KeyEvent(Key::Ctrl('c'))) => {
                 break 'running;
             }
             Ok(rustbox::Event::KeyEvent(key)) => {

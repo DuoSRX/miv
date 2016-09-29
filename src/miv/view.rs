@@ -81,10 +81,6 @@ impl<'a> View<'a> {
         for (y, line) in state.buffer.data.iter().skip(self.topline).take(self.window_height).enumerate() {
             for (x, character) in line.chars().skip(self.leftcol).take(self.window_width + 1).enumerate() {
                 if character == '\n' { continue };
-                // if character == '\n' {
-                //     self.rustbox.print_char(x, y, rustbox::RB_NORMAL, FG_COLOR, BG_COLOR, 0xB6 as char);
-                //     continue;
-                // }
                 self.rustbox.print_char(x, y, rustbox::RB_NORMAL, FG_COLOR, BG_COLOR, character);
             }
         }

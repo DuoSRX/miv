@@ -34,6 +34,15 @@ pub enum Action {
     Repeat(Box<Action>, usize)
 }
 
+#[derive(Eq,PartialEq,Debug,Clone)]
+pub enum MicroState {
+    /// The default microstate. Most events are delegated to the current mode.
+    Mode,
+    /// When entering data in the minibuffer.
+    /// Keystrokes are stored in `minibuffer` until enter or esc is pressed.
+    MiniBuffer
+}
+
 pub struct State<'a> {
     /// Position of the cursor in the buffer.
     /// This is *not* the cursor position on the screen.
@@ -53,6 +62,10 @@ pub struct State<'a> {
     pub mode_type: ModeType, // current mode
     /// Current mode.
     pub mode: Box<Mode + 'a>,
+    /// The content of the minibuffer. Empty string if none.
+    pub minibuffer: String,
+    /// Used for instance when entering data in the minibuffer.
+    pub microstate: MicroState,
 
     yanked: VecDeque<String>,
     previous_action: Option<Action>,
@@ -69,6 +82,8 @@ impl<'a> State<'a> {
             mode_type: ModeType::Normal,
             mode: Box::new(NormalMode::new()),
             keystrokes: Vec::new(),
+            minibuffer: String::new(),
+            microstate: MicroState::Mode,
             yanked: VecDeque::new(),
             previous_action: None,
         }
@@ -76,13 +91,29 @@ impl<'a> State<'a> {
 
     pub fn handle_key(&mut self, key: rustbox::Key) -> bool {
         self.status = None;
-        self.keystrokes.push(key);
 
-        match self.mode.keys_pressed(self.keystrokes.as_slice()) {
-            Some(Action::PartialKey) => false,
-            Some(action) => self.execute_action(action),
-            None => { self.keystrokes = Vec::new(); false }
+        match key {
+            Key::Char(':') if self.microstate == MicroState::Mode => {
+                self.microstate = MicroState::MiniBuffer;
+                false
+            }
+            Key::Char(c) if self.microstate == MicroState::MiniBuffer => {
+                self.minibuffer.push(c);
+                false
+            }
+            Key::Enter if self.microstate == MicroState::MiniBuffer => {
+                self.handle_minibuffer_command()
+            }
+            _ => {
+                self.keystrokes.push(key);
+                match self.mode.keys_pressed(self.keystrokes.as_slice()) {
+                    Some(Action::PartialKey) => false,
+                    Some(action) => self.execute_action(action),
+                    None => { self.keystrokes = Vec::new(); false }
+                }
+            }
         }
+
     }
 
     fn execute_action(&mut self, action: Action) -> bool {
@@ -215,5 +246,16 @@ impl<'a> State<'a> {
         }
 
         self.buffer.insert_text(self.cursor, yanked);
+    }
+
+    fn handle_minibuffer_command(&mut self) -> bool {
+        let result = match self.minibuffer.as_ref() {
+            "w" => self.execute_action(Action::Save),
+            "q" => self.execute_action(Action::Quit),
+            _ => false
+        };
+
+        self.minibuffer = String::new();
+        result
     }
 }

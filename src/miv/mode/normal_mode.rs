@@ -11,6 +11,33 @@ pub struct NormalMode {
     operator_pending: String,
 }
 
+impl Mode for NormalMode {
+    fn color(&self) -> Option<u16> { Some(220) }
+    fn display(&self) -> &'static str { "Normal" }
+
+    fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action> {
+        // Special case to allow zero as a binding while still having the repeat operations
+        if keys[0] == Key::Char('0') && !self.operator_pending.is_empty() {
+            self.operator_pending.push('0');
+            return None;
+        };
+
+        match self.keymap.match_keys(keys) {
+            KeyMatch::Action(action) => self.maybe_repeat(action),
+            KeyMatch::Partial => Some(Action::PartialKey),
+            KeyMatch::None => {
+                match keys[0] {
+                    Key::Char(c) if c.is_digit(10) => {
+                        self.operator_pending.push(c);
+                        None
+                    }
+                    _ => self.default_action(keys[0]),
+                }
+            }
+        }
+    }
+}
+
 impl NormalMode {
     pub fn new() -> NormalMode {
         let mut mode = NormalMode {
@@ -69,33 +96,6 @@ impl NormalMode {
             let n = i32::from_str_radix(self.operator_pending.as_ref(), 10).ok().unwrap_or(1);
             self.operator_pending = String::new();
             Some(Repeat(Box::new(action), n as usize))
-        }
-    }
-}
-
-impl Mode for NormalMode {
-    fn color(&self) -> Option<u16> { Some(220) }
-    fn display(&self) -> &'static str { "Normal" }
-
-    fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action> {
-        // Special case to allow zero as a binding while still having the repeat operations
-        if keys[0] == Key::Char('0') && !self.operator_pending.is_empty() {
-            self.operator_pending.push('0');
-            return None;
-        };
-
-        match self.keymap.match_keys(keys) {
-            KeyMatch::Action(action) => self.maybe_repeat(action),
-            KeyMatch::Partial => Some(Action::PartialKey),
-            KeyMatch::None => {
-                match keys[0] {
-                    Key::Char(c) if c.is_digit(10) => {
-                        self.operator_pending.push(c);
-                        None
-                    }
-                    _ => self.default_action(keys[0]),
-                }
-            }
         }
     }
 }
