@@ -5,7 +5,7 @@ use rustbox::{Color, RustBox};
 use keys::key_to_string;
 use mode::ModeType;
 use point::Point;
-use state::State;
+use state::{State,MicroState};
 
 const BG_COLOR: Color = Color::Byte(234);
 const FG_COLOR: Color = Color::Byte(0);
@@ -126,6 +126,11 @@ impl<'a> View<'a> {
     fn print_status(&self, state: &State) {
         if let Some(status) = state.status.clone() {
             self.rustbox.print(0, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, status.as_ref());
+        }
+
+        if state.microstate == MicroState::MiniBuffer {
+            self.rustbox.print(0, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, ":");
+            self.rustbox.print(1, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, state.minibuffer.as_ref());
         }
     }
 

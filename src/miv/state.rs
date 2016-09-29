@@ -59,7 +59,7 @@ pub struct State<'a> {
     /// Recorded keystrokes. Used for compound actions like `dd`.
     pub keystrokes: Vec<Key>,
     /// Current mode type.
-    pub mode_type: ModeType, // current mode
+    pub mode_type: ModeType,
     /// Current mode.
     pub mode: Box<Mode + 'a>,
     /// The content of the minibuffer. Empty string if none.
@@ -92,17 +92,28 @@ impl<'a> State<'a> {
     pub fn handle_key(&mut self, key: rustbox::Key) -> bool {
         self.status = None;
 
+        if self.microstate == MicroState::MiniBuffer {
+            match key {
+                Key::Char(c) => {
+                    self.minibuffer.push(c);
+                    return false
+                }
+                Key::Enter => {
+                    return self.handle_minibuffer_command()
+                }
+                Key::Esc => {
+                    self.microstate = MicroState::Mode;
+                    self.minibuffer = String::new();
+                    return false
+                }
+                _ => { return false }
+            }
+        }
+
         match key {
             Key::Char(':') if self.microstate == MicroState::Mode => {
                 self.microstate = MicroState::MiniBuffer;
                 false
-            }
-            Key::Char(c) if self.microstate == MicroState::MiniBuffer => {
-                self.minibuffer.push(c);
-                false
-            }
-            Key::Enter if self.microstate == MicroState::MiniBuffer => {
-                self.handle_minibuffer_command()
             }
             _ => {
                 self.keystrokes.push(key);
@@ -252,9 +263,13 @@ impl<'a> State<'a> {
         let result = match self.minibuffer.as_ref() {
             "w" => self.execute_action(Action::Save),
             "q" => self.execute_action(Action::Quit),
-            _ => false
+            _ => {
+                self.status = Some(format!("Not a valid command: {}", self.minibuffer));
+                false
+            }
         };
 
+        self.microstate = MicroState::Mode;
         self.minibuffer = String::new();
         result
     }
