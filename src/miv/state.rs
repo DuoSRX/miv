@@ -40,8 +40,8 @@ pub struct State<'a> {
     pub status: Option<String>, // text to be displayed in the bottom bar
     pub keystrokes: Vec<Key>,
     pub mode_type: ModeType, // current mode
+    pub mode: Box<Mode + 'a>,
 
-    mode: Box<Mode + 'a>,
     yanked: VecDeque<String>,
     previous_action: Option<Action>,
 }

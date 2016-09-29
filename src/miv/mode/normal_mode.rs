@@ -21,8 +21,6 @@ impl NormalMode {
         mode
     }
 
-    pub fn color(&self) -> u16 { 220 }
-
     fn bind_defaults(&mut self) {
         let ref mut km = self.keymap;
         km.bind_defaults();
@@ -76,6 +74,9 @@ impl NormalMode {
 }
 
 impl Mode for NormalMode {
+    fn color(&self) -> Option<u16> { Some(220) }
+    fn display(&self) -> &'static str { "Normal" }
+
     fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action> {
         // Special case to allow zero as a binding while still having the repeat operations
         if keys[0] == Key::Char('0') && !self.operator_pending.is_empty() {

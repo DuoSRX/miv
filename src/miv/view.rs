@@ -12,8 +12,8 @@ const FG_COLOR: Color = Color::Byte(0);
 const BAR_BG_COLOR: Color = Color::Byte(237);
 const BAR_FG_COLOR: Color = Color::Byte(233);
 const BAR_BG_MODE_COLOR: Color = Color::Byte(26);
-
 const BAR_HEIGHT: usize = 2;
+const DEFAULT_MODE_COLOR: u16 = 220;
 
 pub struct View<'a> {
     rustbox: &'a RustBox,
@@ -116,14 +116,15 @@ impl<'a> View<'a> {
     }
 
     fn print_mode(&self, state: &State) {
-        // let mode = format!(" {}  ", state.mode().display);
-        // self.rustbox.print(0, self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, Color::Byte(state.mode().color), mode.as_ref());
+        let mode = format!(" {}  ", state.mode.display());
+        let color = Color::Byte(state.mode.color().unwrap_or(DEFAULT_MODE_COLOR));
+        self.rustbox.print(0, self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, color, mode.as_ref());
     }
 
     fn print_coords(&self, state: &State) {
-        // let coords = format!("  {}:{}  ", state.cursor.y + 1, state.cursor.x);
-        // let color = Color::Byte(state.mode().color);
-        // self.rustbox.print(self.window_width - coords.len(), self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, color, coords.as_ref());
+        let coords = format!("  {}:{}  ", state.cursor.y + 1, state.cursor.x);
+        let color = Color::Byte(state.mode.color().unwrap_or(DEFAULT_MODE_COLOR));
+        self.rustbox.print(self.window_width - coords.len(), self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, color, coords.as_ref());
     }
 
     fn print_status(&self, state: &State) {

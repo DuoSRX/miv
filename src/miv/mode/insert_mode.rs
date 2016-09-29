@@ -1,15 +1,12 @@
 extern crate rustbox;
 use rustbox::Key;
 use keys::{KeyMap,KeyMatch};
-use mode::{Mode,ModeType};
-use point::Direction::*;
+use mode::Mode;
 use state::Action;
 use state::Action::*;
 
 pub struct InsertMode {
     keymap: KeyMap,
-    // color: u16,
-    // pub display: &'static str,
 }
 
 impl InsertMode {
@@ -20,8 +17,6 @@ impl InsertMode {
         mode.bind_defaults();
         mode
     }
-
-    pub fn color(&self) -> u16 { 2 }
 
     fn bind_defaults(&mut self) {
         let ref mut km = self.keymap;
@@ -41,6 +36,9 @@ impl InsertMode {
 }
 
 impl Mode for InsertMode {
+    fn color(&self) -> Option<u16> { Some(2) }
+    fn display(&self) -> &'static str { "Insert" }
+
     fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action> {
         match self.keymap.match_keys(keys) {
             KeyMatch::Action(action) => Some(action),

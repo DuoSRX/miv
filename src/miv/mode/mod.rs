@@ -22,4 +22,6 @@ pub trait Mode {
     fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action>;
     fn default_action(&self, Key) -> Option<Action> { None }
     fn on_exit(&self) -> Option<Action> { None }
+    fn color(&self) -> Option<u16> { None }
+    fn display(&self) -> &'static str;
 }

@@ -19,8 +19,6 @@ impl ReplaceMode {
         mode
     }
 
-    pub fn color(&self) -> u16 { 160 }
-
     fn bind_defaults(&mut self) {
         let ref mut km = self.keymap;
         km.bind_defaults();
@@ -38,6 +36,9 @@ impl ReplaceMode {
 }
 
 impl Mode for ReplaceMode {
+    fn color(&self) -> Option<u16> { Some(160) }
+    fn display(&self) -> &'static str { "Replace" }
+
     fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action> {
         match self.keymap.match_keys(keys) {
             KeyMatch::Action(action) => Some(action),
