@@ -19,6 +19,8 @@ pub enum Action {
     NewLine,
     NewLineAtPoint,
     MoveCursor(Direction),
+    /// Used when in the middle of key sequence such as `yy`.
+    /// See `keystrokes`.
     PartialKey,
     Paste,
     RepeatPrevious,
@@ -33,13 +35,23 @@ pub enum Action {
 }
 
 pub struct State<'a> {
+    /// Position of the cursor in the buffer.
+    /// This is *not* the cursor position on the screen.
+    /// See `View` for more details on this.
     pub cursor: Point,
+    /// Buffer containing the actual text and a path to the file edited.
     pub buffer: Buffer,
+    /// Width of the whole window in the terminal.
     pub width: usize,
+    /// Height of the whole window in the terminal.
     pub height: usize,
-    pub status: Option<String>, // text to be displayed in the bottom bar
+    /// Status message that will be displayed in the bottom bar.
+    pub status: Option<String>,
+    /// Recorded keystrokes. Used for compound actions like `dd`.
     pub keystrokes: Vec<Key>,
+    /// Current mode type.
     pub mode_type: ModeType, // current mode
+    /// Current mode.
     pub mode: Box<Mode + 'a>,
 
     yanked: VecDeque<String>,
@@ -173,7 +185,7 @@ impl<'a> State<'a> {
         };
     }
 
-    pub fn move_cursor(&mut self, direction: Direction) {
+    fn move_cursor(&mut self, direction: Direction) {
         let mut cur = self.cursor.with_direction(direction);
 
         match direction {
