@@ -102,7 +102,7 @@ impl Buffer {
     /// # Panics
     /// When the file can't be loaded, e.g. if it doesn't exist.
     pub fn load_file(&mut self, path: String) {
-        let mut file = OpenOptions::new().read(true).write(true).create(true).open(path).unwrap();
+        let mut file = OpenOptions::new().read(true).write(true).create(true).open(path.clone()).unwrap();
         let mut s = String::new();
         let _ = file.read_to_string(&mut s);
         let mut buf = Vec::new();
@@ -118,6 +118,7 @@ impl Buffer {
         }
 
         self.data = buf;
+        self.filepath = Some(path);
     }
 
     /// Save the buffer at the internal filepath, returning the number of bytes written.

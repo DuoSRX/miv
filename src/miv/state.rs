@@ -69,10 +69,13 @@ pub struct State<'a> {
     /// Used for instance when entering data in the minibuffer.
     pub microstate: MicroState,
 
+    /// Vector of all the open buffers.
     pub buffers: Vec<Rc<RefCell<Buffer>>>,
+    /// Reference to the current active buffer.
     pub buffer: Rc<RefCell<Buffer>>,
-    buffer_idx: usize,
 
+    // used to cycle through the buffers
+    buffer_idx: usize,
     yanked: VecDeque<String>,
     previous_action: Option<Action>,
 }
@@ -205,7 +208,9 @@ impl<'a> State<'a> {
                 self.buffer = self.buffers[self.buffer_idx].clone();
             }
             Action::Multi(ref actions) => {
-                for action in actions { self.execute_action(action.clone()); }
+                let mut result = false;
+                for action in actions { result = self.execute_action(action.clone()); }
+                return result
             }
             Action::Repeat(ref action, times) => {
                 for _ in 0..times { self.execute_action(*action.clone()); }
@@ -287,12 +292,19 @@ impl<'a> State<'a> {
         false
     }
 
+    // TODO: Extract this. I think this deserves its own module.
     fn handle_minibuffer_command(&mut self) -> bool {
-        let result = match self.minibuffer.as_ref() {
-            "w" => self.execute_action(Action::Save),
-            "q" => self.execute_action(Action::Quit),
-            "new" => self.execute_action(Action::NewBuffer),
-            "bn" => self.execute_action(Action::NextBuffer),
+        let result = match self.minibuffer.clone().split_whitespace().collect::<Vec<&str>>().as_slice() {
+            &["w"] => self.execute_action(Action::Save),
+            &["q"] => self.execute_action(Action::Quit),
+            &["wq"] => self.execute_action(Action::Multi(vec!(Action::Save, Action::Quit))),
+            &["new"] => self.execute_action(Action::NewBuffer),
+            &["bn"] => self.execute_action(Action::NextBuffer),
+            &["e", path] => {
+                self.execute_action(Action::NewBuffer);
+                self.buffer.borrow_mut().load_file(path.into());
+                false
+            }
             _ => {
                 self.status = Some(format!("Not a valid command: {}", self.minibuffer));
                 false
