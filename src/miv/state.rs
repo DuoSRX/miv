@@ -105,25 +105,7 @@ impl<'a> State<'a> {
         self.status = None;
 
         if self.microstate == MicroState::MiniBuffer {
-            match key {
-                Key::Char(c) => {
-                    self.minibuffer.push(c);
-                    return false
-                }
-                Key::Backspace => {
-                    self.minibuffer.pop();
-                    return false
-                }
-                Key::Enter => {
-                    return self.handle_minibuffer_command()
-                }
-                Key::Esc => {
-                    self.microstate = MicroState::Mode;
-                    self.minibuffer = String::new();
-                    return false
-                }
-                _ => { return false }
-            }
+            return self.handle_minibuffer_input(key);
         }
 
         match key {
@@ -283,6 +265,26 @@ impl<'a> State<'a> {
         }
 
         self.buffer.borrow_mut().insert_text(self.cursor, yanked);
+    }
+
+    fn handle_minibuffer_input(&mut self, key: Key) -> bool {
+        match key {
+            Key::Char(c) => {
+                self.minibuffer.push(c);
+            }
+            Key::Backspace => {
+                self.minibuffer.pop();
+            }
+            Key::Enter => {
+                return self.handle_minibuffer_command()
+            }
+            Key::Esc => {
+                self.microstate = MicroState::Mode;
+                self.minibuffer = String::new();
+            }
+            _ => {}
+        }
+        false
     }
 
     fn handle_minibuffer_command(&mut self) -> bool {

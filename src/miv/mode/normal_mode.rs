@@ -67,9 +67,6 @@ impl NormalMode {
         km.bind(&[Key::Char('G')], MoveCursor(EndOfFile));
         km.bind(&[Key::Char('g'), Key::Char('g')], MoveCursor(BeginningOfFile));
         km.bind(&[Key::Char('y'), Key::Char('y')], YankLine);
-        km.bind(&[Key::Char('q')], Quit);
-        km.bind(&[Key::Ctrl('c')], Quit);
-        km.bind(&[Key::Ctrl('s')], Save);
         km.bind(&[Key::Char('d'), Key::Char('d')], DeleteLine);
 
         km.bind(&[Key::Char(' '), Key::Char('b'), Key::Char('n')], NextBuffer);
