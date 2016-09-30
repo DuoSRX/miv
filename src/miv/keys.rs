@@ -89,8 +89,9 @@ impl KeyMap {
 
 pub fn key_to_string(key: Key) -> Option<String> {
     match key {
-        Key::Char(c) => Some(c.to_string()),
-        Key::Ctrl(c) => Some(format!("<C-{}>", c)),
+        Key::Char(' ') => Some("SPC-".into()),
+        Key::Char(c) => Some(format!("{}-", c)),
+        Key::Ctrl(c) => Some(format!("C-{}-", c)),
         _ => None,
     }
 }

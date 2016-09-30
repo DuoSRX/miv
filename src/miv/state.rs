@@ -1,5 +1,7 @@
 extern crate rustbox;
 
+use std::rc::Rc;
+use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::usize;
 use rustbox::Key;
@@ -19,6 +21,8 @@ pub enum Action {
     NewLine,
     NewLineAtPoint,
     MoveCursor(Direction),
+    NewBuffer,
+    NextBuffer,
     /// Used when in the middle of key sequence such as `yy`.
     /// See `keystrokes`.
     PartialKey,
@@ -48,8 +52,6 @@ pub struct State<'a> {
     /// This is *not* the cursor position on the screen.
     /// See `View` for more details on this.
     pub cursor: Point,
-    /// Buffer containing the actual text and a path to the file edited.
-    pub buffer: Buffer,
     /// Width of the whole window in the terminal.
     pub width: usize,
     /// Height of the whole window in the terminal.
@@ -67,15 +69,25 @@ pub struct State<'a> {
     /// Used for instance when entering data in the minibuffer.
     pub microstate: MicroState,
 
+    pub buffers: Vec<Rc<RefCell<Buffer>>>,
+    pub buffer: Rc<RefCell<Buffer>>,
+    buffer_idx: usize,
+
     yanked: VecDeque<String>,
     previous_action: Option<Action>,
 }
 
 impl<'a> State<'a> {
     pub fn new(width: usize, height: usize) -> State<'a> {
+        let buffer = Buffer::new();
+        let mut buffers = Vec::new();
+        buffers.push(Rc::new(RefCell::new(buffer)));
+
         State {
             cursor: Point::new(0, 0),
-            buffer: Buffer::new(),
+            buffer: buffers[0].clone(),
+            buffers: buffers,
+            buffer_idx: 0,
             width: width,
             height: height,
             status: None,
@@ -135,36 +147,36 @@ impl<'a> State<'a> {
                 }
             }
             Action::NewLineAtPoint => {
-                self.buffer.split_line(self.cursor);
+                self.buffer.borrow_mut().split_line(self.cursor);
                 self.move_cursor(Down);
                 self.move_cursor(BeginningOfLine);
             }
             Action::NewLine => {
-                self.buffer.new_line(self.cursor);
+                self.buffer.borrow_mut().new_line(self.cursor);
                 self.move_cursor(Down);
                 self.move_cursor(BeginningOfLine);
                 self.switch_mode(ModeType::Insert);
             }
             Action::Insert(c) => {
-                self.buffer.insert(self.cursor, c);
+                self.buffer.borrow_mut().insert(self.cursor, c);
                 self.move_cursor(Right);
             }
             Action::Replace(c) => {
-                self.buffer.upsert(self.cursor, c);
+                self.buffer.borrow_mut().upsert(self.cursor, c);
                 self.move_cursor(Right);
             }
             Action::Delete => {
-                let character = self.buffer.delete(self.cursor);
+                let character = self.buffer.borrow_mut().delete(self.cursor);
                 self.yanked.push_front(character.to_string());
             }
             Action::DeleteLine => {
-                let line = self.buffer.delete_line(self.cursor);
+                let line = self.buffer.borrow_mut().delete_line(self.cursor);
                 self.yanked.push_front(line);
                 self.move_cursor(BeginningOfLine);
             }
             Action::BackwardDelete => {
                 self.move_cursor(Left);
-                self.buffer.delete(self.cursor);
+                self.buffer.borrow_mut().delete(self.cursor);
             }
             Action::Paste => {
                 if self.yanked.is_empty() {
@@ -184,17 +196,27 @@ impl<'a> State<'a> {
                 self.execute_action(Action::ChangeMode(ModeType::Normal));
             }
             Action::Save => {
-                let bytes = self.buffer.save_file();
+                let bytes = self.buffer.borrow_mut().save_file();
                 if bytes > 0 {
-                    let path = self.buffer.filepath.clone().unwrap(); // We know the filepath is set
+                    let path = self.buffer.borrow_mut().filepath.clone().unwrap(); // We know the filepath is set
                     let status = format!("Saved \"{}\" ({} bytes)", path, bytes);
                     self.status = Some(status);
                 }
             }
             Action::YankLine => {
-                if let Some(line) = self.buffer.line_at(self.cursor.y) {
+                if let Some(line) = self.buffer.borrow_mut().line_at(self.cursor.y) {
                     self.yanked.push_front(line.clone());
                 }
+            }
+            Action::NewBuffer => {
+                let buffer = Buffer::new();
+                self.buffer = Rc::new(RefCell::new(buffer));
+                self.buffers.push(self.buffer.clone());
+                self.buffer_idx += 1;
+            }
+            Action::NextBuffer => {
+                self.buffer_idx = (self.buffer_idx + 1) % self.buffers.len();
+                self.buffer = self.buffers[self.buffer_idx].clone();
             }
             Action::Multi(ref actions) => {
                 for action in actions { self.execute_action(action.clone()); }
@@ -232,12 +254,12 @@ impl<'a> State<'a> {
 
         match direction {
             EndOfLine => { cur.x = usize::max_value() } // This is so ugly...
-            EndOfFile => { cur.y = self.buffer.line_len() - 1 }
+            EndOfFile => { cur.y = self.buffer.borrow_mut().line_len() - 1 }
             _ => {}
         }
 
-        let max_x = self.buffer.last_non_empty_col(cur);
-        let max_y = self.buffer.line_len() - 1;
+        let max_x = self.buffer.borrow_mut().last_non_empty_col(cur);
+        let max_y = self.buffer.borrow_mut().line_len() - 1;
         cur.clamp_by(max_x, max_y);
 
         self.cursor = cur;
@@ -248,7 +270,7 @@ impl<'a> State<'a> {
 
         // Pasting a new line
         if let Some(_) = yanked.rfind('\n') {
-            self.buffer.new_line(self.cursor);
+            self.buffer.borrow_mut().new_line(self.cursor);
             self.move_cursor(Down);
             self.move_cursor(BeginningOfLine);
             yanked.pop(); // remove the last \n
@@ -256,13 +278,15 @@ impl<'a> State<'a> {
             self.move_cursor(Right);
         }
 
-        self.buffer.insert_text(self.cursor, yanked);
+        self.buffer.borrow_mut().insert_text(self.cursor, yanked);
     }
 
     fn handle_minibuffer_command(&mut self) -> bool {
         let result = match self.minibuffer.as_ref() {
             "w" => self.execute_action(Action::Save),
             "q" => self.execute_action(Action::Quit),
+            "new" => self.execute_action(Action::NewBuffer),
+            "bn" => self.execute_action(Action::NextBuffer),
             _ => {
                 self.status = Some(format!("Not a valid command: {}", self.minibuffer));
                 false

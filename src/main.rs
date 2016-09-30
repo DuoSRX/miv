@@ -18,8 +18,8 @@ fn main() {
 
     let args: Vec<String> = env::args().collect();
     if let Some(path) = args.get(1) {
-        state.buffer.load_file(path.clone());
-        state.buffer.filepath = Some(path.clone());
+        state.buffer.borrow_mut().load_file(path.clone());
+        state.buffer.borrow_mut().filepath = Some(path.clone());
     }
 
     rustbox.clear();

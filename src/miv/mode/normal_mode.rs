@@ -72,6 +72,8 @@ impl NormalMode {
         km.bind(&[Key::Ctrl('s')], Save);
         km.bind(&[Key::Char('d'), Key::Char('d')], DeleteLine);
 
+        km.bind(&[Key::Char(' '), Key::Char('b'), Key::Char('n')], NextBuffer);
+
         km.bind(&[Key::Char('A')], Multi(vec!(
             MoveCursor(EndOfLine),
             ChangeMode(ModeType::Insert),
