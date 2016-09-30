@@ -110,6 +110,10 @@ impl<'a> State<'a> {
                     self.minibuffer.push(c);
                     return false
                 }
+                Key::Backspace => {
+                    self.minibuffer.pop();
+                    return false
+                }
                 Key::Enter => {
                     return self.handle_minibuffer_command()
                 }
