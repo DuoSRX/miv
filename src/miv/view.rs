@@ -85,8 +85,7 @@ impl<'a> View<'a> {
             }
         }
 
-        let cursor = self.adjusted_cursor(state.cursor);
-        self.rustbox.set_cursor(cursor.x as isize, cursor.y as isize);
+        self.print_cursor(state);
         self.print_bar(state);
 
         self.rustbox.present();
@@ -121,6 +120,15 @@ impl<'a> View<'a> {
         let coords = format!("  {}:{}  ", state.cursor.y + 1, state.cursor.x);
         let color = Color::Byte(state.mode.color().unwrap_or(DEFAULT_MODE_COLOR));
         self.rustbox.print(self.window_width - coords.len(), self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, color, coords.as_ref());
+    }
+
+    fn print_cursor(&self, state: &State) {
+        if state.microstate == MicroState::MiniBuffer {
+            self.rustbox.set_cursor(state.minibuffer.len() as isize + 1, self.height as isize);
+        } else {
+            let cursor = self.adjusted_cursor(state.cursor);
+            self.rustbox.set_cursor(cursor.x as isize, cursor.y as isize);
+        }
     }
 
     fn print_status(&self, state: &State) {
