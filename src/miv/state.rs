@@ -27,6 +27,7 @@ pub enum Action {
     /// See `keystrokes`.
     PartialKey,
     Paste,
+    PrevBuffer,
     RepeatPrevious,
     Replace(char),
     Save,
@@ -207,6 +208,10 @@ impl<'a> State<'a> {
                 self.buffer_idx = (self.buffer_idx + 1) % self.buffers.len();
                 self.buffer = self.buffers[self.buffer_idx].clone();
             }
+            Action::PrevBuffer => {
+                self.buffer_idx = (self.buffer_idx.wrapping_sub(1)) % self.buffers.len();
+                self.buffer = self.buffers[self.buffer_idx].clone();
+            }
             Action::Multi(ref actions) => {
                 let mut result = false;
                 for action in actions { result = self.execute_action(action.clone()); }
@@ -300,6 +305,7 @@ impl<'a> State<'a> {
             &["wq"] => self.execute_action(Action::Multi(vec!(Action::Save, Action::Quit))),
             &["new"] => self.execute_action(Action::NewBuffer),
             &["bn"] => self.execute_action(Action::NextBuffer),
+            &["bp"] => self.execute_action(Action::PrevBuffer),
             &["e", path] => {
                 self.execute_action(Action::NewBuffer);
                 self.buffer.borrow_mut().load_file(path.into());
