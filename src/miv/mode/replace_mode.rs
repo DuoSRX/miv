@@ -1,5 +1,6 @@
-extern crate rustbox;
-use rustbox::Key;
+extern crate termion;
+use termion::event::Key;
+
 use keys::{KeyMap,KeyMatch};
 use mode::Mode;
 use point::Direction::*;
@@ -23,7 +24,7 @@ impl ReplaceMode {
         let ref mut km = self.keymap;
         km.bind_defaults();
         km.bind(&[Key::Backspace], MoveCursor(Left));
-        km.bind(&[Key::Enter], NewLineAtPoint);
+        km.bind(&[Key::Char('\n')], NewLineAtPoint);
     }
 
     fn default_action(&self, key: Key) -> Option<Action> {
@@ -39,7 +40,7 @@ impl Mode for ReplaceMode {
     fn color(&self) -> Option<u16> { Some(160) }
     fn display(&self) -> &'static str { "Replace" }
 
-    fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action> {
+    fn keys_pressed(&mut self, keys: &[Key]) -> Option<Action> {
         match self.keymap.match_keys(keys) {
             KeyMatch::Action(action) => Some(action),
             KeyMatch::Partial => Some(Action::PartialKey),

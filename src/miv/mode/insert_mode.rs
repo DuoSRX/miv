@@ -1,5 +1,6 @@
-extern crate rustbox;
-use rustbox::Key;
+extern crate termion;
+use termion::event::Key;
+
 use keys::{KeyMap,KeyMatch};
 use mode::Mode;
 use state::Action;
@@ -23,7 +24,7 @@ impl InsertMode {
         km.bind_defaults();
         km.bind(&[Key::Char('d'), Key::Char('d')], DeleteLine);
         km.bind(&[Key::Backspace], BackwardDelete);
-        km.bind(&[Key::Enter], NewLineAtPoint);
+        km.bind(&[Key::Char('\n')], NewLineAtPoint);
     }
 
     fn default_action(&self, key: Key) -> Option<Action> {
@@ -39,7 +40,7 @@ impl Mode for InsertMode {
     fn color(&self) -> Option<u16> { Some(2) }
     fn display(&self) -> &'static str { "Insert" }
 
-    fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action> {
+    fn keys_pressed(&mut self, keys: &[Key]) -> Option<Action> {
         match self.keymap.match_keys(keys) {
             KeyMatch::Action(action) => Some(action),
             KeyMatch::Partial => Some(Action::PartialKey),

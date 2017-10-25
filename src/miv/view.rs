@@ -1,22 +1,24 @@
-extern crate rustbox;
+extern crate termion;
 
-use rustbox::{Color, RustBox};
+use termion::raw::IntoRawMode;
+use std::io::{Write, Stdout, stdout};
 
 use keys::key_to_string;
 use mode::ModeType;
 use point::Point;
-use state::{State,MicroState};
+use state::{State, MicroState};
+use term::Term;
 
-const BG_COLOR: Color = Color::Byte(234);
-const FG_COLOR: Color = Color::Byte(0);
-const BAR_BG_COLOR: Color = Color::Byte(237);
-const BAR_FG_COLOR: Color = Color::Byte(233);
-const BAR_BG_MODE_COLOR: Color = Color::Byte(26);
+// const BG_COLOR: Color = Color::Byte(234);
+// const FG_COLOR: Color = Color::Byte(0);
+// const BAR_BG_COLOR: Color = Color::Byte(237);
+// const BAR_FG_COLOR: Color = Color::Byte(233);
+// const BAR_BG_MODE_COLOR: Color = Color::Byte(26);
 const BAR_HEIGHT: usize = 2;
 const DEFAULT_MODE_COLOR: u16 = 220;
 
-pub struct View<'a> {
-    rustbox: &'a RustBox,
+pub struct View {
+    term: Term,
     /// Highest visible buffer line
     topline: usize,
     /// Leftmost visible buffer column
@@ -38,10 +40,10 @@ pub struct View<'a> {
 /// The editor frontend.
 ///
 /// Holds a reference to a `RustBox` instance created by the main app.
-impl<'a> View<'a> {
-    pub fn new(rustbox: &'a RustBox) -> View {
+impl View {
+    pub fn new() -> View {
         View {
-            rustbox: rustbox,
+            term: Term::new(),
             topline: 0,
             leftcol: 0,
             width: 0,
@@ -75,20 +77,21 @@ impl<'a> View<'a> {
 
         self.cursor = self.adjusted_cursor(state.cursor);
 
-        self.rustbox.clear();
+        self.term.clear();
         self.fill_background(state);
 
         for (y, line) in state.buffer.borrow().data.iter().skip(self.topline).take(self.window_height).enumerate() {
             for (x, character) in line.chars().skip(self.leftcol).take(self.window_width + 1).enumerate() {
                 if character == '\n' { continue };
-                self.rustbox.print_char(x, y, rustbox::RB_NORMAL, FG_COLOR, BG_COLOR, character);
+                // self.rustbox.print_char(x, y, rustbox::RB_NORMAL, FG_COLOR, BG_COLOR, character);
+                self.term.print_char(x as u16, y as u16, character);
             }
         }
 
-        self.print_cursor(state);
         self.print_bar(state);
+        self.print_cursor(state);
 
-        self.rustbox.present();
+        self.term.flush();
     }
 
     /// The cursor passed by State is the absolute position in the text buffer.
@@ -97,72 +100,90 @@ impl<'a> View<'a> {
         Point { x: cursor.x - self.leftcol, y: cursor.y - self.topline }
     }
 
-    fn print_bar(&self, state: &State) {
-        if !state.keystrokes.is_empty() {
-            let keys: String = state.keystrokes.iter()
-                .filter_map(|&k| key_to_string(k).or(None))
-                .collect();
-            self.rustbox.print(18, self.window_height, rustbox::RB_BOLD, Color::White, BAR_BG_COLOR, keys.as_ref());
-        }
+    fn print_bar(&mut self, state: &State) {
+        // if !state.keystrokes.is_empty() {
+        //     let keys: String = state.keystrokes.iter()
+        //         .filter_map(|&k| key_to_string(k).or(None))
+        //         .collect();
+        //     self.rustbox.print(18, self.window_height, rustbox::RB_BOLD, Color::White, BAR_BG_COLOR, keys.as_ref());
+        // }
 
         self.print_coords(state);
-        self.print_status(state);
+        // self.print_status(state);
         self.print_mode(state);
     }
 
-    fn print_mode(&self, state: &State) {
+    fn print_mode(&mut self, state: &State) {
         let mode = format!(" {}  ", state.mode.display());
-        let color = Color::Byte(state.mode.color().unwrap_or(DEFAULT_MODE_COLOR));
-        self.rustbox.print(0, self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, color, mode.as_ref());
+        let y = self.window_height as u16;
+        self.term.print(0, y, mode);
+        // let color = Color::Byte(state.mode.color().unwrap_or(DEFAULT_MODE_COLOR));
+        // self.rustbox.print(0, self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, color, mode.as_ref());
     }
 
-    fn print_coords(&self, state: &State) {
+    fn print_coords(&mut self, state: &State) {
         let coords = format!("  {}:{}  ", state.cursor.y + 1, state.cursor.x);
-        let color = Color::Byte(state.mode.color().unwrap_or(DEFAULT_MODE_COLOR));
-        self.rustbox.print(self.window_width - coords.len(), self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, color, coords.as_ref());
+        let x = self.window_width - coords.len();
+        let y = self.window_height;
+        self.term.print(x as u16, y as u16, coords);
+        //self.goto(x as u16, y as u16);
+        //write!(self.stdout, "{}{}", termion::color::Fg(termion::color::Red), coords).unwrap();
+        // let color = Color::Byte(state.mode.color().unwrap_or(DEFAULT_MODE_COLOR));
+        // self.rustbox.print(self.window_width - coords.len(), self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, color, coords.as_ref());
     }
 
-    fn print_cursor(&self, state: &State) {
-        if state.microstate == MicroState::MiniBuffer {
-            self.rustbox.set_cursor(state.minibuffer.len() as isize + 1, self.height as isize);
-        } else {
-            let cursor = self.adjusted_cursor(state.cursor);
-            self.rustbox.set_cursor(cursor.x as isize, cursor.y as isize);
-        }
+    fn print_cursor(&mut self, state: &State) {
+        // if state.microstate == MicroState::MiniBuffer {
+        //     //self.rustbox.set_cursor(state.minibuffer.len() as isize + 1, self.height as isize);
+        // } else {
+        let cursor = self.adjusted_cursor(state.cursor);
+        self.term.goto(cursor.x as u16, cursor.y as u16);
+        self.term.show_cursor();
+        // write!(self.stdout,
+        //        // "{}{}{}{}{}",
+        //        "{}",
+        //        // termion::color::Fg(termion::color::Blue),
+        //        // termion::color::Bg(termion::color::Red),
+        //        termion::cursor::Show,
+        //        // termion::color::Fg(termion::color::Reset)
+        //        // termion::color::Bg(termion::color::Reset)
+        // ).unwrap();
+        //     //self.rustbox.set_cursor(cursor.x as isize, cursor.y as isize);
+        // }
     }
 
     fn print_status(&self, state: &State) {
-        if let Some(status) = state.status.clone() {
-            self.rustbox.print(0, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, status.as_ref());
-        }
+        // if let Some(status) = state.status.clone() {
+        //     self.rustbox.print(0, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, status.as_ref());
+        // }
 
-        if state.microstate == MicroState::MiniBuffer {
-            self.rustbox.print(0, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, ":");
-            self.rustbox.print(1, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, state.minibuffer.as_ref());
-        }
+        // if state.microstate == MicroState::MiniBuffer {
+        //     self.rustbox.print(0, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, ":");
+        //     self.rustbox.print(1, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, state.minibuffer.as_ref());
+        // }
     }
 
     fn fill_background(&self, state: &State) {
-        // Background
-        for y in 0..self.rustbox.height() {
-            for x in 0..self.rustbox.width() {
-                self.rustbox.print(x, y, rustbox::RB_NORMAL, Color::White, BG_COLOR, " ");
-            }
-        }
+        // // Background
+        // for y in 0..self.rustbox.height() {
+        //     for x in 0..self.rustbox.width() {
+        //         self.rustbox.print(x, y, rustbox::RB_NORMAL, Color::White, BG_COLOR, " ");
+        //     }
+        // }
 
-        // Info bar
-        let y = self.window_height;
-        let bg_color = self.bar_bg_color(state);
-        for x in 0..self.rustbox.width() {
-            self.rustbox.print(x, y, rustbox::RB_NORMAL, Color::White, bg_color, " ");
-        }
+        // // Info bar
+        // let y = self.window_height;
+        // let bg_color = self.bar_bg_color(state);
+        // for x in 0..self.rustbox.width() {
+        //     self.rustbox.print(x, y, rustbox::RB_NORMAL, Color::White, bg_color, " ");
+        // }
     }
 
-    fn bar_bg_color(&self, state: &State) -> Color {
-        if state.mode_type == ModeType::Normal {
-            BAR_BG_COLOR
-        } else {
-            BAR_BG_MODE_COLOR
-        }
-    }
+    // fn bar_bg_color(&self, state: &State) -> Color {
+    //     if state.mode_type == ModeType::Normal {
+    //         BAR_BG_COLOR
+    //     } else {
+    //         BAR_BG_MODE_COLOR
+    //     }
+    // }
 }

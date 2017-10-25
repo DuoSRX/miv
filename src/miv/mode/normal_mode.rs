@@ -1,5 +1,6 @@
-extern crate rustbox;
-use rustbox::Key;
+extern crate termion;
+use termion::event::Key;
+
 use keys::{KeyMap,KeyMatch};
 use mode::{Mode,ModeType};
 use point::Direction::*;
@@ -15,7 +16,7 @@ impl Mode for NormalMode {
     fn color(&self) -> Option<u16> { Some(220) }
     fn display(&self) -> &'static str { "Normal" }
 
-    fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action> {
+    fn keys_pressed(&mut self, keys: &[Key]) -> Option<Action> {
         // Special case to allow zero as a binding while still having the repeat operations
         if keys[0] == Key::Char('0') && !self.operator_pending.is_empty() {
             self.operator_pending.push('0');

@@ -1,6 +1,6 @@
 extern crate rustbox;
 
-use rustbox::Key;
+use termion::event::Key;
 use state::Action;
 
 pub use self::insert_mode::InsertMode;
@@ -20,7 +20,7 @@ pub enum ModeType {
 
 pub trait Mode {
     /// The meat of the mode. Defines how to react to key presses.
-    fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action>;
+    fn keys_pressed(&mut self, keys: &[Key]) -> Option<Action>;
     /// Default action in case nothing matches in the mode keymap.
     fn default_action(&self, Key) -> Option<Action> { None }
     /// Action to run when the mode is replace by another.

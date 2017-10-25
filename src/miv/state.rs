@@ -1,10 +1,12 @@
+extern crate termion;
 extern crate rustbox;
 
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::usize;
-use rustbox::Key;
+// use rustbox::Key;
+use termion::event::Key;
 use buffer::Buffer;
 use mode::{Mode,ModeType,NormalMode,InsertMode,ReplaceMode};
 use point::{Direction,Point};
@@ -105,7 +107,7 @@ impl<'a> State<'a> {
         }
     }
 
-    pub fn handle_key(&mut self, key: rustbox::Key) -> bool {
+    pub fn handle_key(&mut self, key: Key) -> bool {
         self.status = None;
 
         if self.microstate == MicroState::MiniBuffer {
@@ -279,14 +281,14 @@ impl<'a> State<'a> {
 
     fn handle_minibuffer_input(&mut self, key: Key) -> bool {
         match key {
-            Key::Char(c) => {
-                self.minibuffer.push(c);
-            }
             Key::Backspace => {
                 self.minibuffer.pop();
             }
-            Key::Enter => {
+            Key::Char('\n') => {
                 return self.handle_minibuffer_command()
+            }
+            Key::Char(c) => {
+                self.minibuffer.push(c);
             }
             Key::Esc => {
                 self.microstate = MicroState::Mode;

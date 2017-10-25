@@ -5,6 +5,7 @@ authors = ["Xavier Perez <duosrx@gmail.com>"]
 
 [dependencies]
 rustbox = "*"
+termion = "*"
 
 [lib]
 name = "miv"

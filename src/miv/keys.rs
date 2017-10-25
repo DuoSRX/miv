@@ -1,5 +1,5 @@
-extern crate rustbox;
-use rustbox::Key;
+extern crate termion;
+use termion::event::Key;
 use std::collections::HashMap;
 use std::mem;
 
@@ -98,8 +98,8 @@ pub fn key_to_string(key: Key) -> Option<String> {
 
 #[cfg(test)]
 pub mod test {
-    extern crate rustbox;
-    use rustbox::Key;
+    extern crate termion;
+    use termion::event::Key;
     use keys::*;
     use state::Action::*;
 
