@@ -1,8 +1,5 @@
 extern crate termion;
 
-use termion::raw::IntoRawMode;
-use std::io::{Write, Stdout, stdout};
-
 use keys::key_to_string;
 use mode::ModeType;
 use point::Point;
@@ -101,15 +98,16 @@ impl View {
     }
 
     fn print_bar(&mut self, state: &State) {
-        // if !state.keystrokes.is_empty() {
-        //     let keys: String = state.keystrokes.iter()
-        //         .filter_map(|&k| key_to_string(k).or(None))
-        //         .collect();
-        //     self.rustbox.print(18, self.window_height, rustbox::RB_BOLD, Color::White, BAR_BG_COLOR, keys.as_ref());
-        // }
+        if !state.keystrokes.is_empty() {
+            let keys: String = state.keystrokes.iter()
+                .filter_map(|&k| key_to_string(k).or(None))
+                .collect();
+            self.term.print(18, self.window_height as u16, keys);
+            //self.rustbox.print(18, self.window_height, rustbox::RB_BOLD, Color::White, BAR_BG_COLOR, keys.as_ref());
+        }
 
         self.print_coords(state);
-        // self.print_status(state);
+        self.print_status(state);
         self.print_mode(state);
     }
 
@@ -126,41 +124,32 @@ impl View {
         let x = self.window_width - coords.len();
         let y = self.window_height;
         self.term.print(x as u16, y as u16, coords);
-        //self.goto(x as u16, y as u16);
-        //write!(self.stdout, "{}{}", termion::color::Fg(termion::color::Red), coords).unwrap();
         // let color = Color::Byte(state.mode.color().unwrap_or(DEFAULT_MODE_COLOR));
         // self.rustbox.print(self.window_width - coords.len(), self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, color, coords.as_ref());
     }
 
     fn print_cursor(&mut self, state: &State) {
-        // if state.microstate == MicroState::MiniBuffer {
-        //     //self.rustbox.set_cursor(state.minibuffer.len() as isize + 1, self.height as isize);
-        // } else {
-        let cursor = self.adjusted_cursor(state.cursor);
-        self.term.goto(cursor.x as u16, cursor.y as u16);
-        self.term.show_cursor();
-        // write!(self.stdout,
-        //        // "{}{}{}{}{}",
-        //        "{}",
-        //        // termion::color::Fg(termion::color::Blue),
-        //        // termion::color::Bg(termion::color::Red),
-        //        termion::cursor::Show,
-        //        // termion::color::Fg(termion::color::Reset)
-        //        // termion::color::Bg(termion::color::Reset)
-        // ).unwrap();
-        //     //self.rustbox.set_cursor(cursor.x as isize, cursor.y as isize);
-        // }
+        if state.microstate == MicroState::MiniBuffer {
+            self.term.goto(state.minibuffer.len() as u16 + 1, self.height as u16);
+        } else {
+            let cursor = self.adjusted_cursor(state.cursor);
+            self.term.goto(cursor.x as u16, cursor.y as u16);
+            self.term.show_cursor();
+        }
     }
 
-    fn print_status(&self, state: &State) {
-        // if let Some(status) = state.status.clone() {
-        //     self.rustbox.print(0, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, status.as_ref());
-        // }
+    fn print_status(&mut self, state: &State) {
+        if let Some(status) = state.status.clone() {
+            self.term.print(0, self.window_height as u16 + 1, status);
+            // self.rustbox.print(0, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, status.as_ref());
+        }
 
-        // if state.microstate == MicroState::MiniBuffer {
+        if state.microstate == MicroState::MiniBuffer {
+            self.term.print(0, self.window_height as u16 + 1, ":".into());
+            self.term.print(1, self.window_height as u16 + 1, state.minibuffer.clone());
         //     self.rustbox.print(0, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, ":");
         //     self.rustbox.print(1, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, state.minibuffer.as_ref());
-        // }
+        }
     }
 
     fn fill_background(&self, state: &State) {

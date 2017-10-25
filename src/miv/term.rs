@@ -24,7 +24,7 @@ impl Term {
 
     pub fn print(&mut self, x: u16, y: u16, s: String) {
         self.goto(x, y);
-        write!(self.stdout, "{}", s).unwrap();
+        self.stdout.write(s.as_bytes()).unwrap();
     }
 
     pub fn print_char(&mut self, x: u16, y: u16, c: char) {
