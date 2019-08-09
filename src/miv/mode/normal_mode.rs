@@ -1,10 +1,9 @@
-extern crate rustbox;
 use rustbox::Key;
-use keys::{KeyMap,KeyMatch};
-use mode::{Mode,ModeType};
-use point::Direction::*;
-use state::Action;
-use state::Action::*;
+use crate::keys::{KeyMap,KeyMatch};
+use crate::mode::{Mode,ModeType};
+use crate::point::Direction::*;
+use crate::state::Action;
+use crate::state::Action::*;
 
 pub struct NormalMode {
     keymap: KeyMap,

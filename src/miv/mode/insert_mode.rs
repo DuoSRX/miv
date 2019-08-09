@@ -1,9 +1,8 @@
-extern crate rustbox;
 use rustbox::Key;
-use keys::{KeyMap,KeyMatch};
-use mode::Mode;
-use state::Action;
-use state::Action::*;
+use crate::keys::{KeyMap,KeyMatch};
+use crate::mode::Mode;
+use crate::state::Action;
+use crate::state::Action::*;
 
 pub struct InsertMode {
     keymap: KeyMap,

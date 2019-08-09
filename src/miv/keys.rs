@@ -1,11 +1,10 @@
-extern crate rustbox;
 use rustbox::Key;
 use std::collections::HashMap;
 use std::mem;
 
-use state::Action;
-use state::Action::*;
-use point::Direction::*;
+use crate::state::Action;
+use crate::state::Action::*;
+use crate::point::Direction::*;
 
 #[derive(PartialEq,Eq,Debug)]
 pub enum KeyMap {
@@ -98,10 +97,8 @@ pub fn key_to_string(key: Key) -> Option<String> {
 
 #[cfg(test)]
 pub mod test {
-    extern crate rustbox;
     use rustbox::Key;
-    use keys::*;
-    use state::Action::*;
+    use crate::keys::*;
 
     #[test]
     fn bind() {

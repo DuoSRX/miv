@@ -1,7 +1,12 @@
 [package]
 name = "miv"
 version = "0.1.0"
+edition = "2018"
+license = "MIT"
+repository = "https://github.com/DuoSRX/miv"
+homepage = "https://github.com/DuoSRX/miv"
 authors = ["Xavier Perez <duosrx@gmail.com>"]
+readme = "README.md"
 
 [dependencies]
 rustbox = "*"

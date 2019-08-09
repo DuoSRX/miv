@@ -2,7 +2,7 @@ use std::io::{Read, Write};
 use std::fs::OpenOptions;
 use std::cmp;
 
-use point::Point;
+use crate::point::Point;
 
 /// Holds the text data and the filepath, if any.
 /// This buffer has no knowledge of the editor.

@@ -1,14 +1,12 @@
-extern crate rustbox;
-
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::usize;
 use rustbox::Key;
-use buffer::Buffer;
-use mode::{Mode,ModeType,NormalMode,InsertMode,ReplaceMode};
-use point::{Direction,Point};
-use point::Direction::*;
+use crate::buffer::Buffer;
+use crate::mode::{Mode,ModeType,NormalMode,InsertMode,ReplaceMode};
+use crate::point::{Direction,Point};
+use crate::point::Direction::*;
 
 #[derive(Eq,PartialEq,Debug,Clone)]
 pub enum Action {

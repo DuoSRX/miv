@@ -1,11 +1,9 @@
-extern crate rustbox;
-
 use rustbox::{Color, RustBox};
 
-use keys::key_to_string;
-use mode::ModeType;
-use point::Point;
-use state::{State,MicroState};
+use crate::keys::key_to_string;
+use crate::mode::ModeType;
+use crate::point::Point;
+use crate::state::{State,MicroState};
 
 const BG_COLOR: Color = Color::Byte(234);
 const FG_COLOR: Color = Color::Byte(0);
