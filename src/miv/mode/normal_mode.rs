@@ -1,4 +1,5 @@
 use crossterm::event::{KeyCode,KeyEvent};
+use crossterm::style::Color;
 use crate::keys::{KeyMap,KeyMatch};
 use crate::mode::{Mode,ModeType};
 use crate::point::Direction::*;
@@ -11,7 +12,7 @@ pub struct NormalMode {
 }
 
 impl Mode for NormalMode {
-    fn color(&self) -> Option<u16> { Some(220) }
+    fn color(&self) -> Option<Color> { Some(Color::DarkBlue) }
     fn display(&self) -> &'static str { "Normal" }
 
     fn keys_pressed(&mut self, keys: &[KeyEvent]) -> Option<Action> {

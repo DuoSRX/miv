@@ -87,8 +87,8 @@ impl KeyMap {
     }
 }
 
-pub fn key_to_string(key: KeyCode) -> Option<String> {
-    match key {
+pub fn key_to_string(key: KeyEvent) -> Option<String> {
+    match key.code {
         KeyCode::Char(' ') => Some("SPC-".into()),
         KeyCode::Char(c) => Some(format!("{}-", c)),
         // Key::Ctrl(c) => Some(format!("C-{}-", c)),

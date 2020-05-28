@@ -1,11 +1,12 @@
 use std::io::{Write, stdout};
 pub use crossterm::{
+  cursor::{SavePosition, RestorePosition, EnableBlinking, DisableBlinking},
   cursor,
   event::{self, Event, KeyCode, KeyEvent},
   execute, queue, style,
   terminal::{self, ClearType},
   QueueableCommand, Command, Result,
-  style::Colorize
+  style::{Colorize, Color, style}
 };
 
 use crate::keys::key_to_string;
@@ -81,6 +82,7 @@ impl View {
 
         self.cursor = self.adjusted_cursor(state.cursor);
 
+        self.out.queue(SavePosition).unwrap();
         self.out.queue(terminal::Clear(ClearType::All)).unwrap();
         self.fill_background(state);
 
@@ -92,8 +94,8 @@ impl View {
             }
         }
 
-        self.print_cursor(state);
         self.print_bar(state);
+        self.print_cursor(state);
 
         self.out.flush().unwrap();
     }
@@ -104,39 +106,43 @@ impl View {
         Point { x: cursor.x - self.leftcol, y: cursor.y - self.topline }
     }
 
-    fn print_bar(&self, state: &State) {
-        // if !state.keystrokes.is_empty() {
-        //     let keys: String = state.keystrokes.iter()
-        //         .filter_map(|&k| key_to_string(k).or(None))
-        //         .collect();
-        //     self.rustbox.print(18, self.window_height, rustbox::RB_BOLD, Color::White, BAR_BG_COLOR, keys.as_ref());
-        // }
+    fn print_bar(&mut self, state: &State) {
+        if !state.keystrokes.is_empty() {
+            let keys: String = state.keystrokes.iter()
+                .filter_map(|&k| key_to_string(k).or(None))
+                .collect();
+            self.out.queue(cursor::MoveTo(18, self.window_height as u16)).unwrap();
+            self.out.queue(style::PrintStyledContent(keys.white().on_grey())).unwrap();
+        }
 
-        // self.print_coords(state);
-        // self.print_status(state);
-        // self.print_mode(state);
+        self.print_coords(state);
+        self.print_status(state);
+        self.print_mode(state);
     }
 
-    fn print_mode(&self, state: &State) {
-        // let mode = format!(" {}  ", state.mode.display());
-        // let color = Color::Byte(state.mode.color().unwrap_or(DEFAULT_MODE_COLOR));
-        // self.rustbox.print(0, self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, color, mode.as_ref());
+    fn print_mode(&mut self, state: &State) {
+        let mode = format!(" {}  ", state.mode.display());
+        let color = state.mode.color().unwrap_or(Color::DarkGrey);
+        let styled = style(mode).with(Color::White).on(color);
+        self.out.queue(cursor::MoveTo(0, self.window_height as u16)).unwrap();
+        self.out.queue(style::PrintStyledContent(styled)).unwrap();
     }
 
-    fn print_coords(&self, state: &State) {
-        // let coords = format!("  {}:{}  ", state.cursor.y + 1, state.cursor.x);
-        // let color = Color::Byte(state.mode.color().unwrap_or(DEFAULT_MODE_COLOR));
-        // self.rustbox.print(self.window_width - coords.len(), self.window_height, rustbox::RB_BOLD, BAR_FG_COLOR, color, coords.as_ref());
+    fn print_coords(&mut self, state: &State) {
+        let coords = format!("  {}:{}  ", state.cursor.y + 1, state.cursor.x);
+        let color = state.mode.color().unwrap_or(Color::DarkGrey);
+        let styled = style(coords.clone()).with(Color::White).on(color);
+        let x = self.window_width - coords.len();
+        self.out.queue(cursor::MoveTo(x as u16, self.window_height as u16)).unwrap();
+        self.out.queue(style::PrintStyledContent(styled)).unwrap();
     }
 
     fn print_cursor(&mut self, state: &State) {
         if state.microstate == MicroState::MiniBuffer {
-            // self.rustbox.set_cursor(state.minibuffer.len() as isize + 1, self.height as isize);
             self.out.queue(cursor::MoveTo(state.minibuffer.len() as u16 + 1, self.height as u16)).unwrap();
         } else {
             let cursor = self.adjusted_cursor(state.cursor);
             self.out.queue(cursor::MoveTo(cursor.x as u16, cursor.y as u16)).unwrap();
-            // self.rustbox.set_cursor(cursor.x as isize, cursor.y as isize);
         }
     }
 

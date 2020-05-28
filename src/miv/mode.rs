@@ -1,6 +1,7 @@
 use crate::state::Action;
 
 use crossterm::event::KeyEvent;
+use crossterm::style::Color;
 
 pub use self::insert_mode::InsertMode;
 pub use self::normal_mode::NormalMode;
@@ -25,7 +26,7 @@ pub trait Mode {
     /// Action to run when the mode is replace by another.
     fn on_exit(&self) -> Option<Action> { None }
     /// Color to use for the bottom bar.
-    fn color(&self) -> Option<u16> { None }
+    fn color(&self) -> Option<Color> { None }
     /// The name of the mode. Displayed in the bottom bar.
     fn display(&self) -> &'static str;
 }

@@ -1,3 +1,4 @@
+use crossterm::style::Color;
 use crossterm::event::{KeyEvent,KeyCode};
 use crate::keys::{KeyMap,KeyMatch};
 use crate::mode::Mode;
@@ -36,7 +37,7 @@ impl InsertMode {
 }
 
 impl Mode for InsertMode {
-    fn color(&self) -> Option<u16> { Some(2) }
+    fn color(&self) -> Option<Color> { Some(Color::DarkYellow) }
     fn display(&self) -> &'static str { "Insert" }
 
     fn keys_pressed(&mut self, keys: &[KeyEvent]) -> Option<Action> {
