@@ -50,42 +50,42 @@ impl NormalMode {
     fn bind_defaults(&mut self) {
         let ref mut km = self.keymap;
         km.bind_defaults();
-        // km.bind(&[Key::Char('k')], MoveCursor(Up));
-        // km.bind(&[Key::Char('j')], MoveCursor(Down));
-        // km.bind(&[Key::Char('h')], MoveCursor(Left));
-        // km.bind(&[Key::Char('l')], MoveCursor(Right));
-        // km.bind(&[Key::Char('o')], NewLine);
-        // km.bind(&[Key::Char('O')], Multi(vec!(MoveCursor(Up), NewLine)));
+        km.bind(&[KeyCode::Char('k').into()], MoveCursor(Up));
+        km.bind(&[KeyCode::Char('j').into()], MoveCursor(Down));
+        km.bind(&[KeyCode::Char('h').into()], MoveCursor(Left));
+        km.bind(&[KeyCode::Char('l').into()], MoveCursor(Right));
+        km.bind(&[KeyCode::Char('o').into()], NewLine);
+        km.bind(&[KeyCode::Char('O').into()], Multi(vec!(MoveCursor(Up), NewLine)));
         km.bind(&[KeyCode::Char('i').into()], ChangeMode(ModeType::Insert));
-        // km.bind(&[Key::Char('R')], ChangeMode(ModeType::Replace));
-        // km.bind(&[Key::Char('x')], Delete);
-        // km.bind(&[Key::Char('p')], Paste);
-        // km.bind(&[Key::Char('.')], RepeatPrevious);
-        // km.bind(&[Key::Char('0')], MoveCursor(BeginningOfLine));
-        // km.bind(&[Key::Char('$')], MoveCursor(EndOfLine));
-        // km.bind(&[Key::Char('G')], MoveCursor(EndOfFile));
-        // km.bind(&[Key::Char('g'), Key::Char('g')], MoveCursor(BeginningOfFile));
-        // km.bind(&[Key::Char('y'), Key::Char('y')], YankLine);
-        // km.bind(&[Key::Char('d'), Key::Char('d')], DeleteLine);
+        // km.bind(&[KeyCode::Char('R')], ChangeMode(ModeType::Replace));
+        km.bind(&[KeyCode::Char('x').into()], Delete);
+        km.bind(&[KeyCode::Char('p').into()], Paste);
+        km.bind(&[KeyCode::Char('.').into()], RepeatPrevious);
+        km.bind(&[KeyCode::Char('0').into()], MoveCursor(BeginningOfLine));
+        km.bind(&[KeyCode::Char('$').into()], MoveCursor(EndOfLine));
+        km.bind(&[KeyCode::Char('G').into()], MoveCursor(EndOfFile));
+        km.bind(&[KeyCode::Char('g').into(), KeyCode::Char('g').into()], MoveCursor(BeginningOfFile));
+        km.bind(&[KeyCode::Char('y').into(), KeyCode::Char('y').into()], YankLine);
+        km.bind(&[KeyCode::Char('d').into(), KeyCode::Char('d').into()], DeleteLine);
 
-        // km.bind(&[Key::Char(' '), Key::Char('b'), Key::Char('n')], NextBuffer);
-        // km.bind(&[Key::Char(' '), Key::Char('b'), Key::Char('p')], PrevBuffer);
+        km.bind(&[KeyCode::Char(' ').into(), KeyCode::Char('b').into(), KeyCode::Char('n').into()], NextBuffer);
+        km.bind(&[KeyCode::Char(' ').into(), KeyCode::Char('b').into(), KeyCode::Char('p').into()], PrevBuffer);
 
-        // km.bind(&[Key::Char('A')], Multi(vec!(
-        //     MoveCursor(EndOfLine),
-        //     ChangeMode(ModeType::Insert),
-        //     MoveCursor(Right),
-        // )));
+        km.bind(&[KeyCode::Char('A').into()], Multi(vec!(
+            MoveCursor(EndOfLine),
+            ChangeMode(ModeType::Insert),
+            MoveCursor(Right),
+        )));
 
-        // km.bind(&[Key::Char('I')], Multi(vec!(
-        //     MoveCursor(BeginningOfLine),
-        //     ChangeMode(ModeType::Insert),
-        // )));
+        km.bind(&[KeyCode::Char('I').into()], Multi(vec!(
+            MoveCursor(BeginningOfLine),
+            ChangeMode(ModeType::Insert),
+        )));
 
-        // km.bind(&[Key::Char('a')], Multi(vec!(
-        //     MoveCursor(Right),
-        //     ChangeMode(ModeType::Insert),
-        // )));
+        km.bind(&[KeyCode::Char('a').into()], Multi(vec!(
+            MoveCursor(Right),
+            ChangeMode(ModeType::Insert),
+        )));
     }
 
     fn maybe_repeat(&mut self, action: Action) -> Option<Action> {

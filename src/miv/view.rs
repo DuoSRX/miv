@@ -89,7 +89,6 @@ impl View {
                 if character == '\n' { continue };
                 self.out.queue(cursor::MoveTo(x as u16, y as u16)).unwrap();
                 self.out.queue(style::PrintStyledContent(character.to_string().white())).unwrap();
-                // self.rustbox.print_char(x, y, rustbox::RB_NORMAL, FG_COLOR, BG_COLOR, character);
             }
         }
 
