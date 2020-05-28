@@ -1,4 +1,4 @@
-use rustbox::Key;
+use crossterm::event::{KeyCode,KeyEvent};
 use crate::keys::{KeyMap,KeyMatch};
 use crate::mode::{Mode,ModeType};
 use crate::point::Direction::*;
@@ -14,9 +14,9 @@ impl Mode for NormalMode {
     fn color(&self) -> Option<u16> { Some(220) }
     fn display(&self) -> &'static str { "Normal" }
 
-    fn keys_pressed(&mut self, keys: &[rustbox::Key]) -> Option<Action> {
+    fn keys_pressed(&mut self, keys: &[KeyEvent]) -> Option<Action> {
         // Special case to allow zero as a binding while still having the repeat operations
-        if keys[0] == Key::Char('0') && !self.operator_pending.is_empty() {
+        if keys[0].code == KeyCode::Char('0') && !self.operator_pending.is_empty() {
             self.operator_pending.push('0');
             return None;
         };
@@ -25,8 +25,8 @@ impl Mode for NormalMode {
             KeyMatch::Action(action) => self.maybe_repeat(action),
             KeyMatch::Partial => Some(Action::PartialKey),
             KeyMatch::None => {
-                match keys[0] {
-                    Key::Char(c) if c.is_digit(10) => {
+                match keys[0].code {
+                    KeyCode::Char(c) if c.is_digit(10) => {
                         self.operator_pending.push(c);
                         None
                     }
@@ -50,42 +50,42 @@ impl NormalMode {
     fn bind_defaults(&mut self) {
         let ref mut km = self.keymap;
         km.bind_defaults();
-        km.bind(&[Key::Char('k')], MoveCursor(Up));
-        km.bind(&[Key::Char('j')], MoveCursor(Down));
-        km.bind(&[Key::Char('h')], MoveCursor(Left));
-        km.bind(&[Key::Char('l')], MoveCursor(Right));
-        km.bind(&[Key::Char('o')], NewLine);
-        km.bind(&[Key::Char('O')], Multi(vec!(MoveCursor(Up), NewLine)));
-        km.bind(&[Key::Char('i')], ChangeMode(ModeType::Insert));
-        km.bind(&[Key::Char('R')], ChangeMode(ModeType::Replace));
-        km.bind(&[Key::Char('x')], Delete);
-        km.bind(&[Key::Char('p')], Paste);
-        km.bind(&[Key::Char('.')], RepeatPrevious);
-        km.bind(&[Key::Char('0')], MoveCursor(BeginningOfLine));
-        km.bind(&[Key::Char('$')], MoveCursor(EndOfLine));
-        km.bind(&[Key::Char('G')], MoveCursor(EndOfFile));
-        km.bind(&[Key::Char('g'), Key::Char('g')], MoveCursor(BeginningOfFile));
-        km.bind(&[Key::Char('y'), Key::Char('y')], YankLine);
-        km.bind(&[Key::Char('d'), Key::Char('d')], DeleteLine);
+        // km.bind(&[Key::Char('k')], MoveCursor(Up));
+        // km.bind(&[Key::Char('j')], MoveCursor(Down));
+        // km.bind(&[Key::Char('h')], MoveCursor(Left));
+        // km.bind(&[Key::Char('l')], MoveCursor(Right));
+        // km.bind(&[Key::Char('o')], NewLine);
+        // km.bind(&[Key::Char('O')], Multi(vec!(MoveCursor(Up), NewLine)));
+        km.bind(&[KeyCode::Char('i').into()], ChangeMode(ModeType::Insert));
+        // km.bind(&[Key::Char('R')], ChangeMode(ModeType::Replace));
+        // km.bind(&[Key::Char('x')], Delete);
+        // km.bind(&[Key::Char('p')], Paste);
+        // km.bind(&[Key::Char('.')], RepeatPrevious);
+        // km.bind(&[Key::Char('0')], MoveCursor(BeginningOfLine));
+        // km.bind(&[Key::Char('$')], MoveCursor(EndOfLine));
+        // km.bind(&[Key::Char('G')], MoveCursor(EndOfFile));
+        // km.bind(&[Key::Char('g'), Key::Char('g')], MoveCursor(BeginningOfFile));
+        // km.bind(&[Key::Char('y'), Key::Char('y')], YankLine);
+        // km.bind(&[Key::Char('d'), Key::Char('d')], DeleteLine);
 
-        km.bind(&[Key::Char(' '), Key::Char('b'), Key::Char('n')], NextBuffer);
-        km.bind(&[Key::Char(' '), Key::Char('b'), Key::Char('p')], PrevBuffer);
+        // km.bind(&[Key::Char(' '), Key::Char('b'), Key::Char('n')], NextBuffer);
+        // km.bind(&[Key::Char(' '), Key::Char('b'), Key::Char('p')], PrevBuffer);
 
-        km.bind(&[Key::Char('A')], Multi(vec!(
-            MoveCursor(EndOfLine),
-            ChangeMode(ModeType::Insert),
-            MoveCursor(Right),
-        )));
+        // km.bind(&[Key::Char('A')], Multi(vec!(
+        //     MoveCursor(EndOfLine),
+        //     ChangeMode(ModeType::Insert),
+        //     MoveCursor(Right),
+        // )));
 
-        km.bind(&[Key::Char('I')], Multi(vec!(
-            MoveCursor(BeginningOfLine),
-            ChangeMode(ModeType::Insert),
-        )));
+        // km.bind(&[Key::Char('I')], Multi(vec!(
+        //     MoveCursor(BeginningOfLine),
+        //     ChangeMode(ModeType::Insert),
+        // )));
 
-        km.bind(&[Key::Char('a')], Multi(vec!(
-            MoveCursor(Right),
-            ChangeMode(ModeType::Insert),
-        )));
+        // km.bind(&[Key::Char('a')], Multi(vec!(
+        //     MoveCursor(Right),
+        //     ChangeMode(ModeType::Insert),
+        // )));
     }
 
     fn maybe_repeat(&mut self, action: Action) -> Option<Action> {
@@ -98,3 +98,4 @@ impl NormalMode {
         }
     }
 }
+//

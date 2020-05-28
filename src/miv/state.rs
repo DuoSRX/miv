@@ -1,10 +1,10 @@
+use crossterm::event::{KeyCode,KeyEvent};
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::usize;
-use rustbox::Key;
 use crate::buffer::Buffer;
-use crate::mode::{Mode,ModeType,NormalMode,InsertMode,ReplaceMode};
+use crate::mode::{Mode,ModeType,NormalMode,InsertMode};
 use crate::point::{Direction,Point};
 use crate::point::Direction::*;
 
@@ -58,11 +58,11 @@ pub struct State<'a> {
     /// Status message that will be displayed in the bottom bar.
     pub status: Option<String>,
     /// Recorded keystrokes. Used for compound actions like `dd`.
-    pub keystrokes: Vec<Key>,
+    pub keystrokes: Vec<KeyEvent>,
     /// Current mode type.
     pub mode_type: ModeType,
     /// Current mode.
-    pub mode: Box<Mode + 'a>,
+    pub mode: Box<dyn Mode + 'a>,
     /// The content of the minibuffer. Empty string if none.
     pub minibuffer: String,
     /// Used for instance when entering data in the minibuffer.
@@ -103,15 +103,15 @@ impl<'a> State<'a> {
         }
     }
 
-    pub fn handle_key(&mut self, key: rustbox::Key) -> bool {
+    pub fn handle_key(&mut self, key: KeyEvent) -> bool {
         self.status = None;
 
         if self.microstate == MicroState::MiniBuffer {
             return self.handle_minibuffer_input(key);
         }
 
-        match key {
-            Key::Char(':') if self.microstate == MicroState::Mode => {
+        match key.code {
+            KeyCode::Char(':') if self.microstate == MicroState::Mode => {
                 self.microstate = MicroState::MiniBuffer;
                 false
             }
@@ -237,9 +237,9 @@ impl<'a> State<'a> {
 
         self.mode_type = mode_type;
         self.mode = match mode_type {
-            ModeType::Insert =>  Box::new(InsertMode::new()) as Box<Mode>,
-            ModeType::Normal =>  Box::new(NormalMode::new()) as Box<Mode>,
-            ModeType::Replace => Box::new(ReplaceMode::new()) as Box<Mode>,
+            ModeType::Insert =>  Box::new(InsertMode::new()) as Box<dyn Mode>,
+            ModeType::Normal =>  Box::new(NormalMode::new()) as Box<dyn Mode>,
+            // ModeType::Replace => Box::new(ReplaceMode::new()) as Box<Mode>,
         };
     }
 
@@ -275,18 +275,18 @@ impl<'a> State<'a> {
         self.buffer.borrow_mut().insert_text(self.cursor, yanked);
     }
 
-    fn handle_minibuffer_input(&mut self, key: Key) -> bool {
-        match key {
-            Key::Char(c) => {
+    fn handle_minibuffer_input(&mut self, key: KeyEvent) -> bool {
+        match key.code {
+            KeyCode::Char(c) => {
                 self.minibuffer.push(c);
             }
-            Key::Backspace => {
+            KeyCode::Backspace => {
                 self.minibuffer.pop();
             }
-            Key::Enter => {
+            KeyCode::Enter => {
                 return self.handle_minibuffer_command()
             }
-            Key::Esc => {
+            KeyCode::Esc => {
                 self.microstate = MicroState::Mode;
                 self.minibuffer = String::new();
             }

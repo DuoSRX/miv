@@ -9,7 +9,7 @@ authors = ["Xavier Perez <duosrx@gmail.com>"]
 readme = "README.md"
 
 [dependencies]
-rustbox = "*"
+crossterm = "*"
 
 [lib]
 name = "miv"
