@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::usize;
 use crate::buffer::Buffer;
-use crate::mode::{Mode,ModeType,NormalMode,InsertMode};
+use crate::mode::{Mode,ModeType,NormalMode,InsertMode,ReplaceMode};
 use crate::point::{Direction,Point};
 use crate::point::Direction::*;
 
@@ -239,7 +239,7 @@ impl<'a> State<'a> {
         self.mode = match mode_type {
             ModeType::Insert =>  Box::new(InsertMode::new()) as Box<dyn Mode>,
             ModeType::Normal =>  Box::new(NormalMode::new()) as Box<dyn Mode>,
-            // ModeType::Replace => Box::new(ReplaceMode::new()) as Box<Mode>,
+            ModeType::Replace => Box::new(ReplaceMode::new()) as Box<Mode>,
         };
     }
 

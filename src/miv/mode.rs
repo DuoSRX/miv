@@ -5,7 +5,7 @@ use crossterm::style::Color;
 
 pub use self::insert_mode::InsertMode;
 pub use self::normal_mode::NormalMode;
-// pub use self::replace_mode::ReplaceMode;
+pub use self::replace_mode::ReplaceMode;
 
 mod insert_mode;
 mod normal_mode;
@@ -15,7 +15,7 @@ mod replace_mode;
 pub enum ModeType {
     Insert,
     Normal,
-    // Replace
+    Replace
 }
 
 pub trait Mode {

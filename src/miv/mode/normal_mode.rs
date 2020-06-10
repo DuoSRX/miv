@@ -1,4 +1,4 @@
-use crossterm::event::{KeyCode,KeyEvent};
+use crossterm::event::{KeyCode,KeyEvent,KeyModifiers};
 use crossterm::style::Color;
 use crate::keys::{KeyMap,KeyMatch};
 use crate::mode::{Mode,ModeType};
@@ -58,7 +58,7 @@ impl NormalMode {
         km.bind(&[KeyCode::Char('o').into()], NewLine);
         km.bind(&[KeyCode::Char('O').into()], Multi(vec!(MoveCursor(Up), NewLine)));
         km.bind(&[KeyCode::Char('i').into()], ChangeMode(ModeType::Insert));
-        // km.bind(&[KeyCode::Char('R')], ChangeMode(ModeType::Replace));
+        km.bind(&[KeyCode::Char('R').into()], ChangeMode(ModeType::Replace));
         km.bind(&[KeyCode::Char('x').into()], Delete);
         km.bind(&[KeyCode::Char('p').into()], Paste);
         km.bind(&[KeyCode::Char('.').into()], RepeatPrevious);
