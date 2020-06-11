@@ -117,7 +117,7 @@ impl<'a> State<'a> {
             }
             _ => {
                 self.keystrokes.push(key);
-                match self.mode.keys_pressed(self.keystrokes.as_slice()) {
+                match self.mode.keys_pressed(&self.keystrokes) {
                     Some(Action::PartialKey) => false,
                     Some(action) => self.execute_action(action),
                     None => { self.keystrokes = Vec::new(); false }
@@ -239,7 +239,7 @@ impl<'a> State<'a> {
         self.mode = match mode_type {
             ModeType::Insert =>  Box::new(InsertMode::new()) as Box<dyn Mode>,
             ModeType::Normal =>  Box::new(NormalMode::new()) as Box<dyn Mode>,
-            ModeType::Replace => Box::new(ReplaceMode::new()) as Box<Mode>,
+            ModeType::Replace => Box::new(ReplaceMode::new()) as Box<dyn Mode>,
         };
     }
 

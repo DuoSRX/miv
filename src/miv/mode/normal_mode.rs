@@ -58,7 +58,7 @@ impl NormalMode {
         km.bind(&[KeyCode::Char('o').into()], NewLine);
         km.bind(&[KeyCode::Char('O').into()], Multi(vec!(MoveCursor(Up), NewLine)));
         km.bind(&[KeyCode::Char('i').into()], ChangeMode(ModeType::Insert));
-        km.bind(&[KeyCode::Char('R').into()], ChangeMode(ModeType::Replace));
+        km.bind(&[KeyEvent::new(KeyCode::Char('R'), KeyModifiers::SHIFT)], ChangeMode(ModeType::Replace));
         km.bind(&[KeyCode::Char('x').into()], Delete);
         km.bind(&[KeyCode::Char('p').into()], Paste);
         km.bind(&[KeyCode::Char('.').into()], RepeatPrevious);

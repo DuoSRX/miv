@@ -10,7 +10,7 @@ pub use crossterm::{
 };
 
 use crate::keys::key_to_string;
-use crate::mode::ModeType;
+// use crate::mode::ModeType;
 use crate::point::Point;
 use crate::state::{State,MicroState};
 
@@ -20,7 +20,7 @@ use crate::state::{State,MicroState};
 // const BAR_FG_COLOR: Color = Color::Byte(233);
 // const BAR_BG_MODE_COLOR: Color = Color::Byte(26);
 const BAR_HEIGHT: usize = 2;
-const DEFAULT_MODE_COLOR: u16 = 220;
+// const DEFAULT_MODE_COLOR: u16 = 220;
 
 pub struct View {
     out: std::io::Stdout,
@@ -146,7 +146,7 @@ impl View {
         }
     }
 
-    fn print_status(&self, state: &State) {
+    fn print_status(&self, _state: &State) {
         // if let Some(status) = state.status.clone() {
         //     self.rustbox.print(0, self.window_height + 1, rustbox::RB_BOLD, Color::White, BG_COLOR, status.as_ref());
         // }
@@ -157,7 +157,7 @@ impl View {
         // }
     }
 
-    fn fill_background(&self, state: &State) {
+    fn fill_background(&self, _state: &State) {
         // // Background
         // for y in 0..self.rustbox.height() {
         //     for x in 0..self.rustbox.width() {
