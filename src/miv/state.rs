@@ -46,7 +46,7 @@ pub enum MicroState {
     MiniBuffer
 }
 
-pub struct State<'a> {
+pub struct State {
     /// Position of the cursor in the buffer.
     /// This is *not* the cursor position on the screen.
     /// See `View` for more details on this.
@@ -62,7 +62,7 @@ pub struct State<'a> {
     /// Current mode type.
     pub mode_type: ModeType,
     /// Current mode.
-    pub mode: Box<dyn Mode + 'a>,
+    pub mode: Box<dyn Mode + 'static>,
     /// The content of the minibuffer. Empty string if none.
     pub minibuffer: String,
     /// Used for instance when entering data in the minibuffer.
@@ -79,8 +79,8 @@ pub struct State<'a> {
     previous_action: Option<Action>,
 }
 
-impl<'a> State<'a> {
-    pub fn new(width: usize, height: usize) -> State<'a> {
+impl State {
+    pub fn new(width: usize, height: usize) -> State {
         let buffer = Buffer::new();
         let mut buffers = Vec::new();
         buffers.push(Rc::new(RefCell::new(buffer)));
